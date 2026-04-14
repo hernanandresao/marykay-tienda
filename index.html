@@ -13,20 +13,13 @@
 <!-- ══ BARRA DE ANUNCIOS ══ -->
 <div class="announce-bar">
   <div class="announce-track">
-    <span>🚚 Envíos a todo Honduras</span>
-    <span class="sep">✦</span>
-    <span>💄 Productos Mary Kay 100% Originales</span>
-    <span class="sep">✦</span>
-    <span>🌸 Atención personalizada por WhatsApp</span>
-    <span class="sep">✦</span>
-    <span>✅ Pago contra entrega disponible</span>
-    <span class="sep">✦</span>
-    <span>🚚 Envíos a todo Honduras</span>
-    <span class="sep">✦</span>
-    <span>💄 Productos Mary Kay 100% Originales</span>
-    <span class="sep">✦</span>
-    <span>🌸 Atención personalizada por WhatsApp</span>
-    <span class="sep">✦</span>
+    <span>🚚 Envíos a todo Honduras</span><span class="sep">✦</span>
+    <span>💄 Productos Mary Kay 100% Originales</span><span class="sep">✦</span>
+    <span>🌸 Atención personalizada por WhatsApp</span><span class="sep">✦</span>
+    <span>✅ Pago contra entrega disponible</span><span class="sep">✦</span>
+    <span>🚚 Envíos a todo Honduras</span><span class="sep">✦</span>
+    <span>💄 Productos Mary Kay 100% Originales</span><span class="sep">✦</span>
+    <span>🌸 Atención personalizada por WhatsApp</span><span class="sep">✦</span>
     <span>✅ Pago contra entrega disponible</span>
   </div>
 </div>
@@ -41,20 +34,22 @@
         <div class="brand-sub">Honduras</div>
       </div>
     </a>
-
     <div class="header-search-wrap">
       <input id="buscar-input" class="header-search" type="text" placeholder="Buscar productos...">
       <span class="search-ico">🔍</span>
     </div>
-
-    <button class="cart-btn" onclick="abrirCarrito()">
-      <span class="cart-ico">🛍️</span>
-      <span class="cart-text">Carrito</span>
-      <span class="cart-badge" id="cart-badge" style="display:none">0</span>
-    </button>
+    <div class="header-right">
+      <div id="user-area" class="user-area">
+        <button class="btn-login-header" onclick="abrirAuth('login')">Iniciar sesión</button>
+        <button class="btn-register-header" onclick="abrirAuth('register')">Crear cuenta</button>
+      </div>
+      <button class="cart-btn" onclick="abrirCarrito()">
+        <span class="cart-ico">🛍️</span>
+        <span class="cart-text">Carrito</span>
+        <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+      </button>
+    </div>
   </div>
-
-  <!-- Nav de categorías -->
   <div class="cat-nav-wrap">
     <div class="cat-nav" id="cat-nav">
       <button class="cat-nav-btn active" onclick="filtrarCat('Todas')">Todos los productos</button>
@@ -62,61 +57,31 @@
   </div>
 </header>
 
-<!-- ══ HERO BANNER ══ -->
+<!-- ══ HERO ══ -->
 <section class="hero">
   <div class="hero-content">
     <div class="hero-tag">✦ Consultora Oficial Mary Kay</div>
     <h1>Tu belleza,<br><span>nuestra pasión</span></h1>
     <p>Descubre los mejores productos de skincare, maquillaje y fragancias. Envíos a todo Honduras con atención personalizada.</p>
     <div class="hero-btns">
-      <button class="btn-hero-primary" onclick="document.getElementById('productos-section').scrollIntoView({behavior:'smooth'})">
-        Ver productos →
-      </button>
-      <a class="btn-hero-wa" href="https://wa.me/504" target="_blank">
-        📱 WhatsApp
-      </a>
+      <button class="btn-hero-primary" onclick="document.getElementById('productos-section').scrollIntoView({behavior:'smooth'})">Ver productos →</button>
+      <a class="btn-hero-wa" href="https://wa.me/504" target="_blank">📱 WhatsApp</a>
     </div>
   </div>
   <div class="hero-deco">
     <div class="hero-blob blob-1"></div>
     <div class="hero-blob blob-2"></div>
-    <div class="hero-icons">
-      <span>✨</span><span>💋</span><span>🌸</span><span>💄</span><span>🌺</span>
-    </div>
+    <div class="hero-icons"><span>✨</span><span>💋</span><span>🌸</span><span>💄</span><span>🌺</span></div>
   </div>
 </section>
 
-<!-- ══ BADGES DE CONFIANZA ══ -->
+<!-- ══ TRUST BADGES ══ -->
 <section class="trust-section">
   <div class="trust-grid">
-    <div class="trust-item">
-      <span class="trust-icon">🚚</span>
-      <div>
-        <strong>Envíos a todo Honduras</strong>
-        <p>Entregamos en todo el país</p>
-      </div>
-    </div>
-    <div class="trust-item">
-      <span class="trust-icon">✅</span>
-      <div>
-        <strong>Productos 100% Originales</strong>
-        <p>Consultora oficial Mary Kay</p>
-      </div>
-    </div>
-    <div class="trust-item">
-      <span class="trust-icon">💬</span>
-      <div>
-        <strong>Atención personalizada</strong>
-        <p>Te asesoramos por WhatsApp</p>
-      </div>
-    </div>
-    <div class="trust-item">
-      <span class="trust-icon">💳</span>
-      <div>
-        <strong>Pago flexible</strong>
-        <p>Efectivo, transferencia o PayPal</p>
-      </div>
-    </div>
+    <div class="trust-item"><span class="trust-icon">🚚</span><div><strong>Envíos a todo Honduras</strong><p>Entregamos en todo el país</p></div></div>
+    <div class="trust-item"><span class="trust-icon">✅</span><div><strong>Productos 100% Originales</strong><p>Consultora oficial Mary Kay</p></div></div>
+    <div class="trust-item"><span class="trust-icon">💬</span><div><strong>Atención personalizada</strong><p>Te asesoramos por WhatsApp</p></div></div>
+    <div class="trust-item"><span class="trust-icon">💳</span><div><strong>Pago flexible</strong><p>Efectivo, transferencia o PayPal</p></div></div>
   </div>
 </section>
 
@@ -126,12 +91,8 @@
     <h2>Nuestros Productos</h2>
     <p>Encuentra todo lo que necesitas para tu rutina de belleza</p>
   </div>
-
   <div class="products-grid" id="products-grid">
-    <div class="loading-state">
-      <div class="loader-ring"></div>
-      <p>Cargando productos...</p>
-    </div>
+    <div class="loading-state"><div class="loader-ring"></div><p>Cargando productos...</p></div>
   </div>
 </section>
 
@@ -142,9 +103,7 @@
       <h2>¿Necesitas asesoría personalizada?</h2>
       <p>Te ayudamos a encontrar los productos perfectos para tu tipo de piel y estilo.</p>
     </div>
-    <a class="btn-promo-wa" href="https://wa.me/504" target="_blank">
-      📱 Escríbenos por WhatsApp
-    </a>
+    <a class="btn-promo-wa" href="https://wa.me/504" target="_blank">📱 Escríbenos por WhatsApp</a>
   </div>
 </section>
 
@@ -152,29 +111,29 @@
 <footer class="site-footer">
   <div class="footer-grid">
     <div class="footer-col">
-      <div class="footer-brand">
-        <span>💄</span> Mary Kay Honduras
-      </div>
+      <div class="footer-brand"><span>💄</span> Mary Kay Honduras</div>
       <p class="footer-desc">Consultora oficial Mary Kay. Productos de belleza de la más alta calidad, con el respaldo de una marca global de confianza.</p>
       <div class="footer-socials">
         <a href="#" class="social-btn" title="Facebook">f</a>
         <a href="#" class="social-btn" title="Instagram">ig</a>
-        <a href="#" class="social-btn" title="WhatsApp">wa</a>
+        <a href="https://wa.me/504" class="social-btn" title="WhatsApp" target="_blank">wa</a>
       </div>
     </div>
     <div class="footer-col">
       <h4>Categorías</h4>
       <ul class="footer-links" id="footer-cats">
-        <li><a href="#" onclick="filtrarCat('Todas');return false">Todos los productos</a></li>
+        <li><a href="#" onclick="filtrarCat('Todas');scrollTop();return false">Todos los productos</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Información</h4>
       <ul class="footer-links">
-        <li><a href="#">Cómo comprar</a></li>
-        <li><a href="#">Métodos de pago</a></li>
-        <li><a href="#">Envíos y entregas</a></li>
-        <li><a href="#">Política de cambios</a></li>
+        <li><a href="#" onclick="abrirInfo('como-comprar');return false">Cómo comprar</a></li>
+        <li><a href="#" onclick="abrirInfo('metodos-pago');return false">Métodos de pago</a></li>
+        <li><a href="#" onclick="abrirInfo('envios');return false">Envíos y entregas</a></li>
+        <li><a href="#" onclick="abrirInfo('cambios');return false">Política de cambios</a></li>
+        <li><a href="#" onclick="abrirInfo('terminos');return false">Términos y condiciones</a></li>
+        <li><a href="#" onclick="abrirInfo('privacidad');return false">Política de privacidad</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -184,9 +143,7 @@
         <li>📍 Honduras</li>
         <li>📦 Envíos a todo el país</li>
       </ul>
-      <a class="footer-wa-btn" href="https://wa.me/504" target="_blank">
-        📱 Chatear ahora
-      </a>
+      <a class="footer-wa-btn" href="https://wa.me/504" target="_blank">📱 Chatear ahora</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -200,14 +157,91 @@
   <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
 </a>
 
-<!-- ══ MODAL PRODUCTO ══ -->
+<!-- ══════════════════════════════════════════════
+     MODAL: AUTENTICACIÓN (Login / Registro)
+═══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-auth" onclick="if(event.target===this)cerrarAuth()">
+  <div class="auth-modal">
+    <button class="modal-close-btn" onclick="cerrarAuth()">×</button>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="cambiarTab('login')">Iniciar sesión</button>
+      <button class="auth-tab" id="tab-register" onclick="cambiarTab('register')">Crear cuenta</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="panel-login" class="auth-panel">
+      <div class="auth-header">
+        <h2>¡Bienvenida! 💄</h2>
+        <p>Inicia sesión para hacer tus pedidos</p>
+      </div>
+      <div id="auth-login-alert"></div>
+      <div class="aform-group">
+        <label>Correo electrónico</label>
+        <input id="login-email" type="email" placeholder="tucorreo@ejemplo.com">
+      </div>
+      <div class="aform-group">
+        <label>Contraseña</label>
+        <input id="login-pass" type="password" placeholder="Tu contraseña">
+      </div>
+      <button class="auth-btn-primary" id="btn-login" onclick="hacerLogin()">Iniciar sesión</button>
+      <p class="auth-switch">¿No tienes cuenta? <a onclick="cambiarTab('register')">Crear cuenta gratis</a></p>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="panel-register" class="auth-panel" style="display:none">
+      <div class="auth-header">
+        <h2>Crear cuenta 🌸</h2>
+        <p>Es rápido y gratuito</p>
+      </div>
+      <div id="auth-register-alert"></div>
+      <div class="aform-row">
+        <div class="aform-group">
+          <label>Nombre completo *</label>
+          <input id="reg-nombre" type="text" placeholder="Tu nombre">
+        </div>
+        <div class="aform-group">
+          <label>Teléfono / WhatsApp *</label>
+          <input id="reg-tel" type="tel" placeholder="9999-9999">
+        </div>
+      </div>
+      <div class="aform-group">
+        <label>Ciudad / Departamento</label>
+        <input id="reg-ciudad" type="text" placeholder="Ej: Tegucigalpa">
+      </div>
+      <div class="aform-group">
+        <label>Correo electrónico *</label>
+        <input id="reg-email" type="email" placeholder="tucorreo@ejemplo.com">
+      </div>
+      <div class="aform-row">
+        <div class="aform-group">
+          <label>Contraseña *</label>
+          <input id="reg-pass" type="password" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="aform-group">
+          <label>Confirmar contraseña *</label>
+          <input id="reg-pass2" type="password" placeholder="Repite tu contraseña">
+        </div>
+      </div>
+      <label class="terms-check">
+        <input type="checkbox" id="reg-terms">
+        <span>Acepto los <a onclick="abrirInfo('terminos')">Términos y condiciones</a> y la <a onclick="abrirInfo('privacidad')">Política de privacidad</a></span>
+      </label>
+      <button class="auth-btn-primary" id="btn-register" onclick="hacerRegistro()">Crear mi cuenta</button>
+      <p class="auth-switch">¿Ya tienes cuenta? <a onclick="cambiarTab('login')">Iniciar sesión</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL: PRODUCTO
+═══════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal-producto" onclick="if(event.target===this)cerrarModalProducto()">
   <div class="producto-modal">
     <button class="modal-close-btn" onclick="cerrarModalProducto()">×</button>
     <div class="pm-left">
-      <div class="pm-img-wrap" id="pm-img-wrap">
-        <div class="pm-img-placeholder">💄</div>
-      </div>
+      <div class="pm-img-wrap" id="pm-img-wrap"><div class="pm-img-placeholder">💄</div></div>
       <div class="pm-badge-row" id="pm-badge-row"></div>
     </div>
     <div class="pm-right">
@@ -223,15 +257,15 @@
           <button class="pm-qty-btn" onclick="cambiarQtyModal(1)">+</button>
         </div>
       </div>
-      <button class="pm-add-btn" id="pm-add-btn" onclick="agregarDesdeModal()">
-        🛍️ Agregar al carrito
-      </button>
+      <button class="pm-add-btn" id="pm-add-btn" onclick="agregarDesdeModal()">🛍️ Agregar al carrito</button>
       <div class="pm-meta" id="pm-meta"></div>
     </div>
   </div>
 </div>
 
-<!-- ══ CARRITO LATERAL ══ -->
+<!-- ══════════════════════════════════════════════
+     CARRITO LATERAL
+═══════════════════════════════════════════════ -->
 <div class="cart-overlay" id="cart-overlay" onclick="if(event.target===this)cerrarCarrito()">
   <aside class="cart-drawer">
     <div class="cart-drawer-header">
@@ -240,18 +274,17 @@
     </div>
     <div class="cart-drawer-body" id="cart-items"></div>
     <div class="cart-drawer-footer" id="cart-footer" style="display:none">
-      <div class="cart-total-row">
-        <span>Total del pedido</span>
-        <strong id="cart-total">L 0.00</strong>
-      </div>
+      <div class="cart-total-row"><span>Total del pedido</span><strong id="cart-total">L 0.00</strong></div>
       <div class="cart-units" id="cart-units"></div>
-      <button class="btn-checkout" onclick="abrirCheckout()">Hacer pedido →</button>
+      <button class="btn-checkout" onclick="irACheckout()">Hacer pedido →</button>
       <button class="btn-seguir" onclick="cerrarCarrito()">← Seguir comprando</button>
     </div>
   </aside>
 </div>
 
-<!-- ══ CHECKOUT MODAL ══ -->
+<!-- ══════════════════════════════════════════════
+     CHECKOUT MODAL
+═══════════════════════════════════════════════ -->
 <div class="checkout-overlay" id="checkout-overlay" onclick="if(event.target===this)cerrarCheckout()">
   <div class="checkout-modal">
     <div class="checkout-top">
@@ -262,28 +295,15 @@
       <div class="checkout-summary-box">
         <div class="csb-title">Resumen del pedido</div>
         <div id="cs-items"></div>
-        <div class="csb-total-row">
-          <span>Total</span>
-          <strong id="cs-total">L 0.00</strong>
-        </div>
+        <div class="csb-total-row"><span>Total</span><strong id="cs-total">L 0.00</strong></div>
       </div>
-
       <div class="checkout-form">
         <h3>Tus datos</h3>
         <div class="cform-row">
-          <div class="cform-group">
-            <label>Nombre completo *</label>
-            <input id="co-nombre" type="text" placeholder="Tu nombre">
-          </div>
-          <div class="cform-group">
-            <label>WhatsApp *</label>
-            <input id="co-tel" type="tel" placeholder="9999-9999">
-          </div>
+          <div class="cform-group"><label>Nombre *</label><input id="co-nombre" type="text" placeholder="Tu nombre"></div>
+          <div class="cform-group"><label>WhatsApp *</label><input id="co-tel" type="tel" placeholder="9999-9999"></div>
         </div>
-        <div class="cform-group">
-          <label>Ciudad / Departamento</label>
-          <input id="co-ciudad" type="text" placeholder="Ej: Tegucigalpa, Cortés...">
-        </div>
+        <div class="cform-group"><label>Ciudad</label><input id="co-ciudad" type="text" placeholder="Ej: Tegucigalpa"></div>
         <div class="cform-group">
           <label>Método de pago</label>
           <select id="co-pago">
@@ -294,19 +314,16 @@
             <option>Pago en partes</option>
           </select>
         </div>
-        <div class="cform-group">
-          <label>Dirección / Notas de entrega</label>
-          <textarea id="co-notas" placeholder="Dirección de entrega, referencias, instrucciones especiales..."></textarea>
-        </div>
-        <button class="btn-place-order" id="btn-place-order">
-          ✅ Confirmar pedido
-        </button>
+        <div class="cform-group"><label>Dirección / Notas de entrega</label><textarea id="co-notas" placeholder="Dirección, referencias, instrucciones..."></textarea></div>
+        <button class="btn-place-order" id="btn-place-order">✅ Confirmar pedido</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══ CONFIRMACIÓN ══ -->
+<!-- ══════════════════════════════════════════════
+     CONFIRMACIÓN
+═══════════════════════════════════════════════ -->
 <div class="confirm-overlay" id="confirm-overlay">
   <div class="confirm-box">
     <div class="confirm-check">✓</div>
@@ -314,12 +331,21 @@
     <div class="confirm-num" id="confirm-num">P-0001</div>
     <p>Gracias <strong id="confirm-name"></strong>, recibimos tu pedido por <strong id="confirm-total-text"></strong>.</p>
     <p class="confirm-sub">Nos comunicaremos contigo pronto para coordinar la entrega 🌸</p>
-    <a class="confirm-wa-btn" id="confirm-wa" href="#" target="_blank">
-      📱 Confirmar por WhatsApp
-    </a>
-    <button class="confirm-new-btn" onclick="document.getElementById('confirm-overlay').style.display='none'">
-      Seguir comprando
-    </button>
+    <a class="confirm-wa-btn" id="confirm-wa" href="#" target="_blank">📱 Confirmar por WhatsApp</a>
+    <button class="confirm-new-btn" onclick="document.getElementById('confirm-overlay').style.display='none'">Seguir comprando</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODALES DE INFORMACIÓN / POLÍTICAS
+═══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-info" onclick="if(event.target===this)cerrarInfo()">
+  <div class="info-modal">
+    <div class="info-modal-header">
+      <h2 id="info-title">Título</h2>
+      <button class="modal-close-btn" onclick="cerrarInfo()" style="position:static;margin-left:auto">×</button>
+    </div>
+    <div class="info-modal-body" id="info-body"></div>
   </div>
 </div>
 
