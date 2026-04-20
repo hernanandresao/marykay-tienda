@@ -1,260 +1,162 @@
 // ═══════════════════════════════════════════════════════
-// MARY KAY HONDURAS — Tienda Oficial v3
-// Con autenticación, políticas y links activos
+// MARY KAY HONDURAS — Tienda Oficial v4
+// Categorías como páginas, compra sin cuenta, WA actualizado
 // ═══════════════════════════════════════════════════════
 
 const SUPABASE_URL = 'https://knoxphxvmjvkdioeopbi.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtub3hwaHh2bWp2a2Rpb2VvcGJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MzUxNjEsImV4cCI6MjA5MTQxMTE2MX0.4XSZGDibY6z0wdA0UysExc1Yt-yMmckfNs7nxU3fZUo'
+const WA_NUMBER = '50498589303'
 
 const { createClient } = supabase
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// ── Helpers ───────────────────────────────────────────
 const fmt = n => `L ${Number(n||0).toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2})}`
 const esc = s => String(s||'').replace(/'/g,"&#39;").replace(/"/g,'&quot;')
 
-// ── Estado global ─────────────────────────────────────
+// ── Estado ────────────────────────────────────────────
 let todosProductos  = []
 let carrito         = []
-let categoriaActiva = 'Todas'
+let paginaActiva    = 'novedades'
 let busqueda        = ''
 let productoModal   = null
 let qtyModal        = 1
-let usuarioActual   = null   // Supabase Auth user
-let clienteActual   = null   // Registro en tabla clientes
+let usuarioActual   = null
+let clienteActual   = null
+
+// Códigos de productos NUEVOS Primavera 2026
+const CODIGOS_NUEVOS = ['MK-NV001','MK-NV002','MK-NV003','MK-NV004','MK-NV005',
+  'MK-NV006','MK-NV007','MK-NV008','MK-NV009']
 
 // ════════════════════════════════════════════════════════
-// AUTENTICACIÓN
+// NAVEGACIÓN DE PÁGINAS
 // ════════════════════════════════════════════════════════
-
-// Verificar sesión al cargar
-async function inicializarAuth() {
-  const { data: { session } } = await db.auth.getSession()
-  if (session?.user) await cargarUsuario(session.user)
-
-  // Escuchar cambios de sesión
-  db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN'  && session?.user) await cargarUsuario(session.user)
-    if (event === 'SIGNED_OUT') {
-      usuarioActual = null
-      clienteActual = null
-      renderUserArea()
-    }
-  })
-}
-
-async function cargarUsuario(user) {
-  usuarioActual = user
-  // Cargar perfil de clientes
-  const { data } = await db.from('clientes').select('*').eq('auth_user_id', user.id).maybeSingle()
-  clienteActual = data
-  renderUserArea()
-  // Pre-llenar checkout si hay datos
-  if (clienteActual) {
-    document.getElementById('co-nombre').value = clienteActual.nombre || ''
-    document.getElementById('co-tel').value    = clienteActual.telefono || ''
-    document.getElementById('co-ciudad').value = clienteActual.ciudad || ''
+function cambiarPagina(pagina) {
+  // Ocultar búsqueda si hay
+  if (busqueda) {
+    document.getElementById('buscar-input').value = ''
+    busqueda = ''
+    ocultarResultadosBusqueda()
   }
-}
 
-function renderUserArea() {
-  const area = document.getElementById('user-area')
-  if (usuarioActual) {
-    const nombre = clienteActual?.nombre || usuarioActual.email.split('@')[0]
-    area.innerHTML = `
-      <div class="user-chip">
-        <span class="user-avatar">${nombre.charAt(0).toUpperCase()}</span>
-        <span class="user-name">Hola, ${nombre.split(' ')[0]}</span>
-        <button class="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión">↩</button>
-      </div>`
-  } else {
-    area.innerHTML = `
-      <button class="btn-login-header" onclick="abrirAuth('login')">Iniciar sesión</button>
-      <button class="btn-register-header" onclick="abrirAuth('register')">Crear cuenta</button>`
-  }
-}
-
-// ── Abrir/cerrar modal de auth ────────────────────────
-function abrirAuth(tab = 'login') {
-  document.getElementById('modal-auth').classList.add('open')
-  cambiarTab(tab)
-  document.body.style.overflow = 'hidden'
-}
-function cerrarAuth() {
-  document.getElementById('modal-auth').classList.remove('open')
-  document.body.style.overflow = ''
-}
-function cambiarTab(tab) {
-  document.getElementById('panel-login').style.display    = tab === 'login'    ? 'block' : 'none'
-  document.getElementById('panel-register').style.display = tab === 'register' ? 'block' : 'none'
-  document.getElementById('tab-login').classList.toggle('active',    tab === 'login')
-  document.getElementById('tab-register').classList.toggle('active', tab === 'register')
-  document.getElementById('auth-login-alert').innerHTML    = ''
-  document.getElementById('auth-register-alert').innerHTML = ''
-}
-
-// ── Login ─────────────────────────────────────────────
-async function hacerLogin() {
-  const email = document.getElementById('login-email').value.trim()
-  const pass  = document.getElementById('login-pass').value
-  const alertEl = document.getElementById('auth-login-alert')
-  const btn   = document.getElementById('btn-login')
-
-  if (!email || !pass) { mostrarAuthAlert(alertEl, 'Completa todos los campos.', 'error'); return }
-
-  btn.disabled = true; btn.textContent = 'Ingresando...'
-  const { error } = await db.auth.signInWithPassword({ email, password: pass })
-  btn.disabled = false; btn.textContent = 'Iniciar sesión'
-
-  if (error) {
-    const msg = error.message.includes('Invalid') ? 'Correo o contraseña incorrectos.' : error.message
-    mostrarAuthAlert(alertEl, msg, 'error')
-    return
-  }
-  cerrarAuth()
-}
-
-// ── Registro ──────────────────────────────────────────
-async function hacerRegistro() {
-  const nombre = document.getElementById('reg-nombre').value.trim()
-  const tel    = document.getElementById('reg-tel').value.trim()
-  const ciudad = document.getElementById('reg-ciudad').value.trim()
-  const email  = document.getElementById('reg-email').value.trim()
-  const pass   = document.getElementById('reg-pass').value
-  const pass2  = document.getElementById('reg-pass2').value
-  const terms  = document.getElementById('reg-terms').checked
-  const alertEl = document.getElementById('auth-register-alert')
-  const btn    = document.getElementById('btn-register')
-
-  if (!nombre || !tel || !email || !pass) { mostrarAuthAlert(alertEl, 'Completa todos los campos obligatorios (*).', 'error'); return }
-  if (pass !== pass2) { mostrarAuthAlert(alertEl, 'Las contraseñas no coinciden.', 'error'); return }
-  if (pass.length < 6) { mostrarAuthAlert(alertEl, 'La contraseña debe tener al menos 6 caracteres.', 'error'); return }
-  if (!terms) { mostrarAuthAlert(alertEl, 'Debes aceptar los términos y condiciones.', 'error'); return }
-
-  btn.disabled = true; btn.textContent = 'Creando cuenta...'
-
-  const { data: authData, error: authError } = await db.auth.signUp({
-    email, password: pass,
-    options: { data: { nombre } }
+  // Cambiar tab activo
+  document.querySelectorAll('.cat-nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === pagina)
   })
 
-  if (authError) {
-    btn.disabled = false; btn.textContent = 'Crear mi cuenta'
-    const msg = authError.message.includes('already registered') ? 'Este correo ya tiene una cuenta. Inicia sesión.' : authError.message
-    mostrarAuthAlert(alertEl, msg, 'error')
-    return
-  }
+  // Cambiar página activa
+  document.querySelectorAll('.cat-page').forEach(p => p.classList.remove('active'))
+  const nuevaPagina = document.getElementById('page-' + pagina)
+  if (nuevaPagina) nuevaPagina.classList.add('active')
 
-  // Actualizar el perfil de clientes con datos completos
-  if (authData.user) {
-    await db.from('clientes')
-      .update({ nombre, telefono: tel, ciudad: ciudad || null, email })
-      .eq('auth_user_id', authData.user.id)
-  }
-
-  btn.disabled = false; btn.textContent = 'Crear mi cuenta'
-  mostrarAuthAlert(alertEl,
-    '✓ Cuenta creada exitosamente. Revisa tu correo para confirmar (opcional) e inicia sesión.',
-    'success')
-  setTimeout(() => cambiarTab('login'), 2500)
+  paginaActiva = pagina
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  renderPagina(pagina)
 }
 
-// ── Cerrar sesión ─────────────────────────────────────
-async function cerrarSesion() {
-  await db.auth.signOut()
-  renderUserArea()
-}
+function renderPagina(pagina) {
+  if (!todosProductos.length) return
 
-function mostrarAuthAlert(el, msg, tipo) {
-  el.innerHTML = `<div class="auth-alert auth-alert-${tipo}">${msg}</div>`
+  switch(pagina) {
+    case 'novedades':
+      renderGrid('grid-novedades', todosProductos.filter(p => CODIGOS_NUEVOS.includes(p.codigo)))
+      break
+    case 'skincare':
+      renderGrid('grid-sk-clinical', todosProductos.filter(p => p.categoria === 'Skincare' && p.codigo.startsWith('MK-CS')))
+      renderGrid('grid-sk-timewise', todosProductos.filter(p => p.categoria === 'Skincare' && p.codigo.startsWith('MK-TW')))
+      renderGrid('grid-sk-repair',   todosProductos.filter(p => p.categoria === 'Skincare' && p.codigo.startsWith('MK-TR')))
+      renderGrid('grid-sk-basica',   todosProductos.filter(p => p.categoria === 'Skincare' && (p.codigo.startsWith('MK-SK') || p.codigo.startsWith('MK-NV001'))))
+      renderGrid('grid-sk-clearproof',todosProductos.filter(p => p.categoria === 'Skincare' && p.codigo.startsWith('MK-CP')))
+      renderGrid('grid-sk-mkmen',    todosProductos.filter(p => p.categoria === 'Cuidado Personal' && p.codigo.startsWith('MK-MN')))
+      renderGrid('grid-sk-especial', todosProductos.filter(p => p.categoria === 'Cuidado Personal' && p.codigo.startsWith('MK-CE')))
+      break
+    case 'maquillaje':
+      renderGrid('grid-mq-rostro', todosProductos.filter(p => p.categoria === 'Maquillaje' && (p.codigo.startsWith('MK-RO') || p.codigo.startsWith('MK-CF'))))
+      renderGrid('grid-mq-ojos',   todosProductos.filter(p => p.categoria === 'Maquillaje' && (p.codigo.startsWith('MK-OJ') || p.codigo.startsWith('MK-MA') || p.codigo.startsWith('MK-DE') || p.codigo.startsWith('MK-CF0'))))
+      renderGrid('grid-mq-labios', todosProductos.filter(p => p.categoria === 'Maquillaje' && (p.codigo.startsWith('MK-LA') || p.codigo.startsWith('MK-CF002') || p.codigo.startsWith('MK-CF003') || p.codigo.startsWith('MK-CF004') || p.codigo.startsWith('MK-NV003') || p.codigo.startsWith('MK-NV004') || p.codigo.startsWith('MK-NV005') || p.codigo.startsWith('MK-NV006') || p.codigo.startsWith('MK-NV007'))))
+      break
+    case 'fragancias':
+      renderGrid('grid-fr-ella', todosProductos.filter(p => p.categoria === 'Fragancias' && p.codigo.startsWith('MK-FR')))
+      renderGrid('grid-fr-el',   todosProductos.filter(p => p.categoria === 'Fragancias' && p.codigo.startsWith('MK-FH')))
+      break
+    case 'cuidado':
+      renderGrid('grid-cp-satin', todosProductos.filter(p => p.categoria === 'Cuidado Personal' && (p.codigo.startsWith('MK-SB') || p.codigo.startsWith('MK-NV008') || p.codigo.startsWith('MK-NV009'))))
+      renderGrid('grid-cp-corpo', todosProductos.filter(p => p.categoria === 'Cuidado Personal' && (p.codigo.startsWith('MK-GL') || p.codigo.startsWith('MK-CE')) && !p.codigo.startsWith('MK-CE0')))
+      // Also add MKMen individual
+      const skCpCorpo = document.getElementById('grid-cp-corpo')
+      if (skCpCorpo) {
+        const extras = todosProductos.filter(p => p.categoria === 'Cuidado Personal' && p.codigo.startsWith('MK-CE'))
+        renderGrid('grid-cp-corpo', [...todosProductos.filter(p => p.categoria === 'Cuidado Personal' && p.codigo.startsWith('MK-GL')), ...extras])
+      }
+      break
+    case 'herramientas':
+      renderGrid('grid-herramientas', todosProductos.filter(p => p.categoria === 'Herramientas'))
+      break
+    case 'sets':
+      renderGrid('grid-set-timewise',  todosProductos.filter(p => p.categoria === 'Sets y Regalos' && p.codigo.startsWith('MK-SET-TW')))
+      renderGrid('grid-set-repair',    todosProductos.filter(p => p.categoria === 'Sets y Regalos' && p.codigo.startsWith('MK-SET-TR')))
+      renderGrid('grid-set-skincare',  todosProductos.filter(p => p.categoria === 'Sets y Regalos' && p.codigo.startsWith('MK-SET-SK')))
+      renderGrid('grid-set-clearproof',todosProductos.filter(p => p.categoria === 'Sets y Regalos' && p.codigo.startsWith('MK-SET-CP')))
+      renderGrid('grid-set-mkmen',     todosProductos.filter(p => p.categoria === 'Sets y Regalos' && p.codigo.startsWith('MK-SET-MN')))
+      renderGrid('grid-set-satin',     todosProductos.filter(p => p.categoria === 'Sets y Regalos' && (p.codigo.startsWith('MK-SET-SB') || p.codigo.startsWith('MK-SET-HC') || p.codigo.startsWith('MK-NV002') || p.codigo.startsWith('MK-NV008'))))
+      break
+  }
 }
 
 // ════════════════════════════════════════════════════════
-// PRODUCTOS
+// CARGAR PRODUCTOS
 // ════════════════════════════════════════════════════════
 async function cargarProductos() {
-  document.getElementById('products-grid').innerHTML = `
-    <div class="loading-state"><div class="loader-ring"></div><p>Cargando productos...</p></div>`
-
   const { data, error } = await db
     .from('v_productos')
     .select('id,codigo,nombre,categoria,precio_venta,stock_actual,alerta,imagen_url')
-    .eq('estado','Activo').order('categoria').order('nombre')
+    .eq('estado','Activo').order('nombre')
 
-  if (error || !data) {
-    document.getElementById('products-grid').innerHTML =
-      '<div class="empty-state"><span class="es-icon">⚠️</span><p>Error al cargar. Recarga la página.</p></div>'
-    return
-  }
+  if (error || !data) return
 
   todosProductos = data
-  buildCatNav()
-  buildFooterCats()
-  renderProductos()
+  renderPagina(paginaActiva)
 
+  // Tiempo real
   db.channel('tienda-sync')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'productos' }, cargarProductos)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'pedido_items' }, cargarProductos)
     .subscribe()
 }
 
-function buildCatNav() {
-  const cats = ['Todas', ...new Set(todosProductos.map(p => p.categoria))]
-  document.getElementById('cat-nav').innerHTML = cats.map(c =>
-    `<button class="cat-nav-btn ${c === categoriaActiva ? 'active' : ''}" onclick="filtrarCat('${esc(c)}')">${c}</button>`
-  ).join('')
-}
+// ── Render de una grilla ──────────────────────────────
+function renderGrid(gridId, lista) {
+  const grid = document.getElementById(gridId)
+  if (!grid) return
 
-function buildFooterCats() {
-  const cats = ['Todas', ...new Set(todosProductos.map(p => p.categoria))]
-  document.getElementById('footer-cats').innerHTML = cats.map(c =>
-    `<li><a href="#" onclick="filtrarCat('${esc(c)}');scrollTop();return false">${c}</a></li>`
-  ).join('')
-}
-
-function scrollTop() { document.getElementById('productos-section').scrollIntoView({ behavior: 'smooth' }) }
-
-function filtrarCat(cat) {
-  categoriaActiva = cat
-  document.querySelectorAll('.cat-nav-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === cat))
-  renderProductos()
-  scrollTop()
-}
-
-document.getElementById('buscar-input')?.addEventListener('input', e => {
-  busqueda = e.target.value.toLowerCase()
-  if (busqueda) categoriaActiva = 'Todas'
-  document.querySelectorAll('.cat-nav-btn').forEach(b => b.classList.toggle('active', !busqueda && b.textContent.trim() === 'Todas'))
-  renderProductos()
-})
-
-function renderProductos() {
-  const lista = todosProductos.filter(p => {
-    const porCat  = categoriaActiva === 'Todas' || p.categoria === categoriaActiva
-    const porBusq = !busqueda || p.nombre.toLowerCase().includes(busqueda) || p.categoria.toLowerCase().includes(busqueda)
-    return porCat && porBusq
-  })
-
-  const grid = document.getElementById('products-grid')
-  if (lista.length === 0) {
-    grid.innerHTML = `<div class="empty-state"><span class="es-icon">🔍</span><p>No encontramos productos.<br>Prueba con otra búsqueda.</p></div>`
+  if (!lista.length) {
+    grid.innerHTML = `<div class="grid-empty">No hay productos disponibles en este momento.</div>`
     return
   }
 
   grid.innerHTML = lista.map(p => {
     const agotado   = p.alerta === 'AGOTADO'
     const bajo      = p.alerta === 'BAJO'
+    const esNuevo   = CODIGOS_NUEVOS.includes(p.codigo)
     const enCarrito = carrito.find(i => i.id === p.id)
+
     const img = p.imagen_url
       ? `<img src="${p.imagen_url}" alt="${esc(p.nombre)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=pc-placeholder>💄</div>'">`
       : `<div class="pc-placeholder">💄</div>`
+
+    const badge = agotado
+      ? `<span class="pc-overlay-badge agotado">Agotado</span>`
+      : bajo
+      ? `<span class="pc-overlay-badge bajo">Últimas</span>`
+      : esNuevo
+      ? `<span class="pc-overlay-badge nuevo">¡Nuevo!</span>`
+      : ''
 
     return `
       <div class="product-card ${agotado ? 'agotado' : ''}" onclick="abrirModalProducto('${p.id}')">
         <div class="pc-img-wrap">
           ${img}
-          ${agotado ? '<span class="pc-overlay-badge agotado">Agotado</span>' : bajo ? '<span class="pc-overlay-badge bajo">Últimas unidades</span>' : ''}
-          <div class="pc-quick-add">${agotado ? 'Producto agotado' : enCarrito ? '✓ En carrito — ver más' : '🛍️ Ver y agregar'}</div>
+          ${badge}
+          <div class="pc-quick-add">${agotado ? 'Agotado' : enCarrito ? '✓ En carrito' : '🛍️ Ver y agregar'}</div>
         </div>
         <div class="pc-body">
           <div class="pc-cat">${p.categoria}</div>
@@ -266,6 +168,53 @@ function renderProductos() {
         </div>
       </div>`
   }).join('')
+}
+
+// ════════════════════════════════════════════════════════
+// BÚSQUEDA
+// ════════════════════════════════════════════════════════
+document.getElementById('buscar-input')?.addEventListener('input', e => {
+  busqueda = e.target.value.toLowerCase().trim()
+  if (!busqueda) {
+    ocultarResultadosBusqueda()
+    return
+  }
+  mostrarResultadosBusqueda()
+})
+
+function mostrarResultadosBusqueda() {
+  // Crear sección de resultados si no existe
+  let sr = document.getElementById('search-results-page')
+  if (!sr) {
+    sr = document.createElement('div')
+    sr.id = 'search-results-page'
+    document.querySelector('.site-main').prepend(sr)
+  }
+
+  const found = todosProductos.filter(p =>
+    p.nombre.toLowerCase().includes(busqueda) ||
+    p.categoria.toLowerCase().includes(busqueda) ||
+    p.codigo.toLowerCase().includes(busqueda)
+  )
+
+  // Ocultar páginas de categoría
+  document.querySelectorAll('.cat-page').forEach(p => p.style.display = 'none')
+
+  sr.style.display = 'block'
+  sr.innerHTML = `
+    <h3>${found.length} resultado${found.length !== 1 ? 's' : ''} para "<em>${busqueda}</em>"</h3>
+    <div class="products-grid" id="grid-search"></div>`
+
+  renderGrid('grid-search', found)
+}
+
+function ocultarResultadosBusqueda() {
+  const sr = document.getElementById('search-results-page')
+  if (sr) sr.style.display = 'none'
+  document.querySelectorAll('.cat-page').forEach(p => p.style.display = '')
+  // Restaurar la página activa
+  const pa = document.getElementById('page-' + paginaActiva)
+  if (pa) pa.classList.add('active')
 }
 
 // ════════════════════════════════════════════════════════
@@ -287,16 +236,20 @@ function abrirModalProducto(id) {
   document.getElementById('pm-qty').textContent    = '1'
 
   const stockEl = document.getElementById('pm-stock')
-  stockEl.textContent = p.alerta === 'AGOTADO' ? 'Sin stock disponible' : p.alerta === 'BAJO' ? `¡Solo quedan ${p.stock_actual} unidades!` : `Disponible · ${p.stock_actual} en stock`
+  stockEl.textContent = p.alerta === 'AGOTADO' ? 'Sin stock disponible'
+    : p.alerta === 'BAJO' ? `¡Solo quedan ${p.stock_actual} unidades!`
+    : `Disponible · ${p.stock_actual} en stock`
   stockEl.style.color = p.alerta === 'AGOTADO' ? 'var(--red)' : p.alerta === 'BAJO' ? 'var(--amber)' : 'var(--green)'
 
+  const esNuevo = CODIGOS_NUEVOS.includes(p.codigo)
   document.getElementById('pm-badge-row').innerHTML = `
     <span style="font-size:11px;background:var(--mk-xlight);color:var(--mk-dark);padding:4px 10px;border-radius:99px;font-weight:700">${p.categoria}</span>
-    ${p.alerta !== 'OK' ? `<span style="font-size:11px;background:${p.alerta==='AGOTADO'?'var(--red-bg)':'#fffbeb'};color:${p.alerta==='AGOTADO'?'var(--red)':'var(--amber)'};padding:4px 10px;border-radius:99px;font-weight:700">${p.alerta==='AGOTADO'?'Agotado':'Pocas unidades'}</span>` : ''}`
+    ${esNuevo ? `<span style="font-size:11px;background:var(--mk);color:#fff;padding:4px 10px;border-radius:99px;font-weight:700">¡Nuevo!</span>` : ''}
+    ${p.alerta !== 'OK' && p.alerta !== 'AGOTADO' ? `<span style="font-size:11px;background:#fffbeb;color:var(--amber);padding:4px 10px;border-radius:99px;font-weight:700">Pocas unidades</span>` : ''}`
 
   const addBtn = document.getElementById('pm-add-btn')
   addBtn.disabled    = p.alerta === 'AGOTADO'
-  addBtn.textContent = p.alerta === 'AGOTADO' ? '🚫 Producto agotado' : '🛍️ Agregar al carrito'
+  addBtn.textContent = p.alerta === 'AGOTADO' ? '🚫 Agotado' : '🛍️ Agregar al carrito'
 
   document.getElementById('pm-meta').innerHTML = `
     <span class="pm-meta-item">Código: ${p.codigo}</span>
@@ -330,7 +283,8 @@ function agregarDesdeModal() {
   actualizarCarritoUI()
   cerrarModalProducto()
   abrirCarrito()
-  renderProductos()
+  // Re-render la página actual para actualizar badges
+  renderPagina(paginaActiva)
 }
 
 // ════════════════════════════════════════════════════════
@@ -341,21 +295,20 @@ function cambiarCantidad(id, delta) {
   if (!item) return
   item.cantidad = Math.max(0, item.cantidad + delta)
   if (item.cantidad === 0) carrito = carrito.filter(x => x.id !== id)
-  actualizarCarritoUI(); renderProductos()
+  actualizarCarritoUI()
 }
 
 function quitarItem(id) {
   carrito = carrito.filter(x => x.id !== id)
-  actualizarCarritoUI(); renderProductos()
+  actualizarCarritoUI()
 }
 
 function actualizarCarritoUI() {
   const total    = carrito.reduce((s, i) => s + i.cantidad * i.precio, 0)
   const totalUds = carrito.reduce((s, i) => s + i.cantidad, 0)
-
   const badge = document.getElementById('cart-badge')
-  badge.textContent    = totalUds
-  badge.style.display  = totalUds > 0 ? 'flex' : 'none'
+  badge.textContent   = totalUds
+  badge.style.display = totalUds > 0 ? 'flex' : 'none'
 
   const body = document.getElementById('cart-items')
   if (carrito.length === 0) {
@@ -363,7 +316,6 @@ function actualizarCarritoUI() {
     document.getElementById('cart-footer').style.display = 'none'
     return
   }
-
   body.innerHTML = carrito.map(i => `
     <div class="cart-item">
       <div class="ci-img">${i.imagen ? `<img src="${i.imagen}" alt="${esc(i.nombre)}" onerror="this.parentElement.innerHTML='💄'">` : '💄'}</div>
@@ -394,34 +346,20 @@ function cerrarCarrito() {
   document.body.style.overflow = ''
 }
 
-// Ir a checkout — requiere sesión iniciada
-function irACheckout() {
-  if (carrito.length === 0) return
-  if (!usuarioActual) {
-    cerrarCarrito()
-    abrirAuth('login')
-    // Mostrar mensaje de que necesita iniciar sesión
-    setTimeout(() => {
-      document.getElementById('auth-login-alert').innerHTML =
-        '<div class="auth-alert auth-alert-info">💄 Inicia sesión o crea una cuenta para completar tu pedido.</div>'
-    }, 300)
-    return
-  }
-  cerrarCarrito()
-  abrirCheckout()
-}
-
 // ════════════════════════════════════════════════════════
-// CHECKOUT
+// CHECKOUT — No requiere cuenta
 // ════════════════════════════════════════════════════════
 function abrirCheckout() {
+  if (carrito.length === 0) return
+  cerrarCarrito()
+
   const total = carrito.reduce((s, i) => s + i.cantidad * i.precio, 0)
   document.getElementById('cs-items').innerHTML = carrito.map(i =>
     `<div class="csb-item"><span>${i.nombre} × ${i.cantidad}</span><strong>${fmt(i.cantidad * i.precio)}</strong></div>`
   ).join('')
   document.getElementById('cs-total').textContent = fmt(total)
 
-  // Pre-llenar con datos del usuario
+  // Pre-llenar si hay sesión
   if (clienteActual) {
     document.getElementById('co-nombre').value = clienteActual.nombre || ''
     document.getElementById('co-tel').value    = clienteActual.telefono || ''
@@ -431,34 +369,65 @@ function abrirCheckout() {
   document.getElementById('checkout-overlay').classList.add('open')
   document.body.style.overflow = 'hidden'
 }
-
 function cerrarCheckout() {
   document.getElementById('checkout-overlay').classList.remove('open')
   document.body.style.overflow = ''
 }
 
 document.getElementById('btn-place-order')?.addEventListener('click', async () => {
-  const nombre = document.getElementById('co-nombre').value.trim()
-  const tel    = document.getElementById('co-tel').value.trim()
-  const ciudad = document.getElementById('co-ciudad').value.trim()
-  const pago   = document.getElementById('co-pago').value
-  const notas  = document.getElementById('co-notas').value.trim()
+  const nombre   = document.getElementById('co-nombre').value.trim()
+  const tel      = document.getElementById('co-tel').value.trim()
+  const ciudad   = document.getElementById('co-ciudad').value.trim()
+  const pago     = document.getElementById('co-pago').value
+  const notas    = document.getElementById('co-notas').value.trim()
+  const registrar = document.getElementById('co-registrar')?.checked
 
-  if (!nombre || !tel) { alert('Por favor completa tu nombre y WhatsApp.'); return }
-  if (!usuarioActual)  { cerrarCheckout(); abrirAuth('login'); return }
+  if (!nombre || !tel) { alert('Por favor completa tu nombre y número de WhatsApp.'); return }
 
   const btn = document.getElementById('btn-place-order')
   btn.disabled = true; btn.textContent = 'Procesando...'
 
   try {
-    // Actualizar datos del cliente si cambiaron
-    if (clienteActual) {
-      await db.from('clientes').update({ nombre, telefono: tel, ciudad: ciudad || null }).eq('id', clienteActual.id)
+    let clienteId = null
+
+    if (usuarioActual && clienteActual) {
+      // Usuario con sesión activa
+      clienteId = clienteActual.id
+      await db.from('clientes').update({ nombre, telefono: tel, ciudad: ciudad || null }).eq('id', clienteId)
+    } else {
+      // Sin cuenta — buscar por teléfono o crear
+      const { data: cli } = await db.from('clientes').select('id').eq('telefono', tel).maybeSingle()
+      if (cli) {
+        clienteId = cli.id
+        await db.from('clientes').update({ nombre, ciudad: ciudad || null }).eq('id', clienteId)
+      } else {
+        const { data: nvo } = await db.from('clientes')
+          .insert({ nombre, telefono: tel, ciudad: ciudad || null, etiqueta: 'Nueva' })
+          .select('id').single()
+        clienteId = nvo?.id
+      }
+
+      // Registro opcional
+      if (registrar) {
+        const email = document.getElementById('co-email')?.value.trim()
+        const pass  = document.getElementById('co-pass')?.value
+        const pass2 = document.getElementById('co-pass2')?.value
+        if (email && pass && pass === pass2 && pass.length >= 6) {
+          const { data: authData } = await db.auth.signUp({
+            email, password: pass,
+            options: { data: { nombre } }
+          })
+          if (authData?.user && clienteId) {
+            await db.from('clientes').update({ auth_user_id: authData.user.id, email }).eq('id', clienteId)
+          }
+        }
+      }
     }
 
-    const clienteId = clienteActual?.id
+    // Número de pedido
     const { data: num } = await db.rpc('generar_numero_pedido')
 
+    // Crear pedido
     const { data: ped } = await db.from('pedidos').insert({
       numero: num, cliente_id: clienteId,
       canal: 'Tienda online', metodo_pago: pago,
@@ -466,10 +435,12 @@ document.getElementById('btn-place-order')?.addEventListener('click', async () =
       fecha: new Date().toISOString().split('T')[0],
     }).select('id').single()
 
+    // Items
     await db.from('pedido_items').insert(
       carrito.map(i => ({ pedido_id: ped.id, producto_id: i.id, cantidad: i.cantidad, precio_unitario: i.precio }))
     )
 
+    // Éxito
     const total   = carrito.reduce((s, i) => s + i.cantidad * i.precio, 0)
     const telNum  = tel.replace(/\D/g, '')
     const waMsg   = encodeURIComponent(`Hola! 🌸 Acabo de hacer el pedido *${num}* por *${fmt(total)}*. ¿Me pueden confirmar? Gracias!`)
@@ -477,25 +448,127 @@ document.getElementById('btn-place-order')?.addEventListener('click', async () =
     document.getElementById('confirm-num').textContent        = num
     document.getElementById('confirm-name').textContent       = nombre
     document.getElementById('confirm-total-text').textContent = fmt(total)
-    document.getElementById('confirm-wa').href                = `https://wa.me/504${telNum}?text=${waMsg}`
+    document.getElementById('confirm-wa').href = `https://wa.me/${WA_NUMBER}?text=${waMsg}`
 
-    carrito = []
-    actualizarCarritoUI()
-    renderProductos()
+    carrito = []; actualizarCarritoUI(); renderPagina(paginaActiva)
     cerrarCheckout()
-    ;['co-nombre','co-tel','co-ciudad','co-notas'].forEach(id => document.getElementById(id).value = '')
+    ;['co-nombre','co-tel','co-ciudad','co-notas'].forEach(id => { const el = document.getElementById(id); if(el) el.value = '' })
     document.getElementById('confirm-overlay').style.display = 'flex'
 
   } catch (err) {
     console.error(err)
     alert('Error al procesar el pedido. Intenta de nuevo.')
   }
-
   btn.disabled = false; btn.textContent = '✅ Confirmar pedido'
 })
 
 // ════════════════════════════════════════════════════════
-// MODALES DE INFORMACIÓN / POLÍTICAS
+// AUTH — Opcional
+// ════════════════════════════════════════════════════════
+async function inicializarAuth() {
+  const { data: { session } } = await db.auth.getSession()
+  if (session?.user) await cargarUsuario(session.user)
+  db.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN'  && session?.user) await cargarUsuario(session.user)
+    if (event === 'SIGNED_OUT') { usuarioActual = null; clienteActual = null; renderUserArea() }
+  })
+}
+
+async function cargarUsuario(user) {
+  usuarioActual = user
+  const { data } = await db.from('clientes').select('*').eq('auth_user_id', user.id).maybeSingle()
+  clienteActual = data
+  renderUserArea()
+}
+
+function renderUserArea() {
+  const area = document.getElementById('user-area')
+  if (!area) return
+  if (usuarioActual) {
+    const nombre = clienteActual?.nombre || usuarioActual.email.split('@')[0]
+    area.innerHTML = `
+      <div class="user-chip">
+        <span class="user-avatar">${nombre.charAt(0).toUpperCase()}</span>
+        <span class="user-name">${nombre.split(' ')[0]}</span>
+        <button class="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión">↩</button>
+      </div>`
+  } else {
+    area.innerHTML = `<button class="btn-login-header" onclick="abrirAuth('login')">Mi cuenta</button>`
+  }
+}
+
+function abrirAuth(tab = 'login') {
+  document.getElementById('modal-auth').classList.add('open')
+  cambiarTab(tab)
+  document.body.style.overflow = 'hidden'
+}
+function cerrarAuth() {
+  document.getElementById('modal-auth').classList.remove('open')
+  document.body.style.overflow = ''
+}
+function cambiarTab(tab) {
+  document.getElementById('panel-login').style.display    = tab === 'login'    ? 'block' : 'none'
+  document.getElementById('panel-register').style.display = tab === 'register' ? 'block' : 'none'
+  document.getElementById('tab-login').classList.toggle('active',    tab === 'login')
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register')
+  document.getElementById('auth-login-alert').innerHTML    = ''
+  document.getElementById('auth-register-alert').innerHTML = ''
+}
+
+async function hacerLogin() {
+  const email = document.getElementById('login-email').value.trim()
+  const pass  = document.getElementById('login-pass').value
+  const alertEl = document.getElementById('auth-login-alert')
+  const btn   = document.getElementById('btn-login')
+  if (!email || !pass) { mostrarAuthAlert(alertEl,'Completa todos los campos.','error'); return }
+  btn.disabled = true; btn.textContent = 'Ingresando...'
+  const { error } = await db.auth.signInWithPassword({ email, password: pass })
+  btn.disabled = false; btn.textContent = 'Iniciar sesión'
+  if (error) { mostrarAuthAlert(alertEl, error.message.includes('Invalid') ? 'Correo o contraseña incorrectos.' : error.message, 'error'); return }
+  cerrarAuth()
+}
+
+async function hacerRegistro() {
+  const nombre = document.getElementById('reg-nombre').value.trim()
+  const tel    = document.getElementById('reg-tel').value.trim()
+  const ciudad = document.getElementById('reg-ciudad').value.trim()
+  const email  = document.getElementById('reg-email').value.trim()
+  const pass   = document.getElementById('reg-pass').value
+  const pass2  = document.getElementById('reg-pass2').value
+  const terms  = document.getElementById('reg-terms').checked
+  const alertEl = document.getElementById('auth-register-alert')
+  const btn    = document.getElementById('btn-register')
+  if (!nombre || !tel || !email || !pass) { mostrarAuthAlert(alertEl,'Completa todos los campos obligatorios.','error'); return }
+  if (pass !== pass2) { mostrarAuthAlert(alertEl,'Las contraseñas no coinciden.','error'); return }
+  if (pass.length < 6) { mostrarAuthAlert(alertEl,'La contraseña debe tener al menos 6 caracteres.','error'); return }
+  if (!terms) { mostrarAuthAlert(alertEl,'Debes aceptar los términos y condiciones.','error'); return }
+  btn.disabled = true; btn.textContent = 'Creando cuenta...'
+  const { data: authData, error: authError } = await db.auth.signUp({
+    email, password: pass, options: { data: { nombre } }
+  })
+  if (authError) {
+    btn.disabled = false; btn.textContent = 'Crear mi cuenta'
+    mostrarAuthAlert(alertEl, authError.message.includes('already registered') ? 'Este correo ya tiene una cuenta.' : authError.message, 'error')
+    return
+  }
+  if (authData?.user) {
+    await db.from('clientes').update({ nombre, telefono: tel, ciudad: ciudad || null, email }).eq('auth_user_id', authData.user.id)
+  }
+  btn.disabled = false; btn.textContent = 'Crear mi cuenta'
+  mostrarAuthAlert(alertEl, '✓ Cuenta creada. Ya puedes iniciar sesión.', 'success')
+  setTimeout(() => cambiarTab('login'), 2000)
+}
+
+async function cerrarSesion() {
+  await db.auth.signOut()
+}
+
+function mostrarAuthAlert(el, msg, tipo) {
+  el.innerHTML = `<div class="auth-alert auth-alert-${tipo}">${msg}</div>`
+}
+
+// ════════════════════════════════════════════════════════
+// MODALES DE INFORMACIÓN
 // ════════════════════════════════════════════════════════
 const infoContent = {
   'como-comprar': {
@@ -503,12 +576,12 @@ const infoContent = {
     html: `
       <div class="info-steps">
         <div class="info-step"><div class="step-num">1</div><div><strong>Explora nuestros productos</strong><p>Navega por categorías o usa el buscador para encontrar lo que necesitas.</p></div></div>
-        <div class="info-step"><div class="step-num">2</div><div><strong>Crea tu cuenta</strong><p>Regístrate gratis con tu correo. Solo necesitas hacerlo una vez.</p></div></div>
-        <div class="info-step"><div class="step-num">3</div><div><strong>Agrega al carrito</strong><p>Haz clic en el producto que te guste y agrégalo a tu carrito.</p></div></div>
-        <div class="info-step"><div class="step-num">4</div><div><strong>Completa tu pedido</strong><p>Ingresa tu dirección y método de pago preferido.</p></div></div>
-        <div class="info-step"><div class="step-num">5</div><div><strong>Confirmamos y enviamos</strong><p>Te contactamos por WhatsApp para confirmar y coordinar la entrega.</p></div></div>
-        <div class="info-step"><div class="step-num">6</div><div><strong>¡Recibe tus productos!</strong><p>Disfruta tus productos Mary Kay 100% originales en la puerta de tu casa.</p></div></div>
-      </div>`
+        <div class="info-step"><div class="step-num">2</div><div><strong>Agrega al carrito</strong><p>Haz clic en el producto y agrégalo a tu carrito. No necesitas crear una cuenta.</p></div></div>
+        <div class="info-step"><div class="step-num">3</div><div><strong>Completa tu pedido</strong><p>Ingresa tu nombre, número de WhatsApp y dirección de entrega.</p></div></div>
+        <div class="info-step"><div class="step-num">4</div><div><strong>Confirmamos por WhatsApp</strong><p>Te contactamos al número que nos diste para confirmar y coordinar la entrega.</p></div></div>
+        <div class="info-step"><div class="step-num">5</div><div><strong>¡Recibe tus productos!</strong><p>Disfruta tus productos Mary Kay 100% originales en la puerta de tu casa.</p></div></div>
+      </div>
+      <div class="info-note" style="margin-top:16px">💡 ¿Quieres llevar un historial de tus pedidos? Puedes crear una cuenta gratuita al momento de hacer tu pedido.</div>`
   },
   'metodos-pago': {
     titulo: 'Métodos de pago',
@@ -517,93 +590,60 @@ const infoContent = {
         <div class="info-pago-item"><span class="pago-ico">💵</span><div><strong>Efectivo al recibir</strong><p>Pagas cuando tu pedido llega a tus manos. Sin riesgo.</p></div></div>
         <div class="info-pago-item"><span class="pago-ico">🏦</span><div><strong>Transferencia BAC Credomatic</strong><p>Transferencia bancaria directa. Te enviamos los datos por WhatsApp.</p></div></div>
         <div class="info-pago-item"><span class="pago-ico">💻</span><div><strong>PayPal</strong><p>Pago seguro en línea con tu cuenta PayPal o tarjeta de crédito.</p></div></div>
-        <div class="info-pago-item"><span class="pago-ico">💳</span><div><strong>Tarjeta de crédito/débito</strong><p>Aceptamos Visa y Mastercard a través de pasarela segura.</p></div></div>
+        <div class="info-pago-item"><span class="pago-ico">💳</span><div><strong>Tarjeta de crédito/débito</strong><p>Aceptamos Visa y Mastercard.</p></div></div>
         <div class="info-pago-item"><span class="pago-ico">📅</span><div><strong>Pago en partes</strong><p>Dividimos tu pedido en cuotas. Consulta disponibilidad por WhatsApp.</p></div></div>
-      </div>
-      <div class="info-note">💡 Todos los pagos son 100% seguros. Nunca compartimos tu información financiera.</div>`
+      </div>`
   },
   'envios': {
     titulo: 'Envíos y entregas',
     html: `
-      <h3 style="color:var(--mk);margin-bottom:12px">Cobertura nacional 🚚</h3>
-      <p>Realizamos envíos a <strong>todos los departamentos de Honduras</strong>. No importa dónde estés, hacemos llegar tus productos Mary Kay.</p>
-      <div class="info-table" style="margin:16px 0">
+      <p>Realizamos envíos a <strong>todos los departamentos de Honduras</strong>.</p>
+      <div class="info-table" style="margin:14px 0">
         <div class="info-table-row header"><span>Zona</span><span>Tiempo estimado</span></div>
         <div class="info-table-row"><span>Tegucigalpa</span><span>1-2 días hábiles</span></div>
         <div class="info-table-row"><span>San Pedro Sula</span><span>2-3 días hábiles</span></div>
         <div class="info-table-row"><span>Otras ciudades</span><span>3-5 días hábiles</span></div>
         <div class="info-table-row"><span>Zonas rurales</span><span>5-7 días hábiles</span></div>
       </div>
-      <h3 style="color:var(--mk);margin:16px 0 8px">Costos de envío</h3>
-      <p>El costo de envío varía según tu ubicación. Te lo informamos exactamente al confirmar tu pedido por WhatsApp.</p>
+      <p>El costo de envío varía según tu ubicación. Te lo informamos al confirmar tu pedido por WhatsApp.</p>
       <div class="info-note">📦 Todos los pedidos son empacados cuidadosamente para que lleguen en perfectas condiciones.</div>`
   },
   'cambios': {
-    titulo: 'Política de cambios y devoluciones',
+    titulo: 'Política de cambios',
     html: `
-      <h3 style="color:var(--mk);margin-bottom:12px">Nuestra garantía</h3>
-      <p>Tu satisfacción es nuestra prioridad. Si por alguna razón no estás conforme con tu pedido, estamos aquí para ayudarte.</p>
-      <div class="info-list" style="margin-top:16px">
-        <div class="info-pago-item"><span class="pago-ico">✅</span><div><strong>Producto dañado o incorrecto</strong><p>Si recibes un producto dañado o diferente al pedido, lo cambiamos sin costo adicional.</p></div></div>
-        <div class="info-pago-item"><span class="pago-ico">📸</span><div><strong>¿Cómo proceder?</strong><p>Toma una foto del producto y contáctanos por WhatsApp dentro de las 48 horas de recibido.</p></div></div>
-        <div class="info-pago-item"><span class="pago-ico">⏰</span><div><strong>Plazo para cambios</strong><p>Aceptamos cambios dentro de los 7 días calendario después de recibir tu pedido.</p></div></div>
-        <div class="info-pago-item"><span class="pago-ico">🚫</span><div><strong>Productos no elegibles</strong><p>Por higiene, no se aceptan devoluciones de productos de maquillaje ya abiertos o usados.</p></div></div>
-      </div>
-      <div class="info-note">💬 Para cualquier gestión, contáctanos por WhatsApp. Respondemos en horario de lunes a sábado.</div>`
+      <div class="info-list">
+        <div class="info-pago-item"><span class="pago-ico">✅</span><div><strong>Producto dañado o incorrecto</strong><p>Lo cambiamos sin costo adicional.</p></div></div>
+        <div class="info-pago-item"><span class="pago-ico">📸</span><div><strong>¿Cómo proceder?</strong><p>Toma una foto y contáctanos por WhatsApp dentro de las 48 horas de recibido.</p></div></div>
+        <div class="info-pago-item"><span class="pago-ico">⏰</span><div><strong>Plazo</strong><p>7 días calendario después de recibir tu pedido.</p></div></div>
+        <div class="info-pago-item"><span class="pago-ico">🚫</span><div><strong>Productos no elegibles</strong><p>Por higiene, no se aceptan devoluciones de maquillaje ya abierto o usado.</p></div></div>
+      </div>`
   },
   'terminos': {
     titulo: 'Términos y condiciones',
     html: `
-      <p style="color:var(--gray-400);font-size:12px;margin-bottom:16px">Última actualización: Enero 2025</p>
-      <h3>1. Aceptación de términos</h3>
-      <p>Al crear una cuenta y realizar compras en nuestra tienda, aceptas estos términos y condiciones en su totalidad.</p>
-      <h3>2. Cuenta de usuario</h3>
-      <p>Para realizar pedidos debes crear una cuenta con información verídica. Eres responsable de mantener la confidencialidad de tu contraseña.</p>
-      <h3>3. Productos</h3>
-      <p>Todos los productos ofrecidos son Mary Kay originales adquiridos a través de canales oficiales. Nos reservamos el derecho de modificar precios y disponibilidad sin previo aviso.</p>
-      <h3>4. Pedidos</h3>
-      <p>Un pedido se considera confirmado cuando recibes confirmación por WhatsApp. Nos reservamos el derecho de cancelar pedidos en caso de errores de precio o falta de stock.</p>
-      <h3>5. Precios</h3>
-      <p>Todos los precios están expresados en Lempiras Hondureños (L). Los precios incluyen impuestos aplicables.</p>
-      <h3>6. Envíos y entregas</h3>
-      <p>Los tiempos de entrega son estimados y pueden variar. No nos hacemos responsables por retrasos causados por factores externos.</p>
-      <h3>7. Pagos</h3>
-      <p>El pago debe realizarse al momento de la entrega (efectivo) o antes del envío (transferencia/PayPal). No se envía mercadería sin confirmación de pago para pagos electrónicos.</p>
-      <h3>8. Modificaciones</h3>
-      <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios serán comunicados a través de nuestros canales oficiales.</p>`
+      <h3>1. Aceptación</h3><p>Al realizar compras en nuestra tienda, aceptas estos términos en su totalidad.</p>
+      <h3>2. Cuenta de usuario (opcional)</h3><p>Puedes comprar sin cuenta. Si creas una cuenta, eres responsable de mantener la confidencialidad de tu contraseña.</p>
+      <h3>3. Productos</h3><p>Todos los productos son Mary Kay originales. Nos reservamos el derecho de modificar precios y disponibilidad.</p>
+      <h3>4. Pedidos</h3><p>Un pedido se confirma cuando recibes confirmación por WhatsApp.</p>
+      <h3>5. Precios</h3><p>Precios en Lempiras Hondureños (L). Incluyen impuestos aplicables.</p>
+      <h3>6. Envíos</h3><p>Los tiempos de entrega son estimados. No nos responsabilizamos por retrasos externos.</p>
+      <h3>7. Pagos</h3><p>Para pagos electrónicos, no se envía mercadería sin confirmación de pago.</p>`
   },
   'privacidad': {
     titulo: 'Política de privacidad',
     html: `
-      <p style="color:var(--gray-400);font-size:12px;margin-bottom:16px">Última actualización: Enero 2025</p>
-      <h3>1. Información que recopilamos</h3>
-      <p>Recopilamos información que nos proporcionas directamente: nombre, correo electrónico, número de teléfono, ciudad y dirección de entrega.</p>
-      <h3>2. Uso de la información</h3>
-      <p>Usamos tu información para:</p>
-      <ul style="margin:8px 0 8px 20px;line-height:2">
-        <li>Procesar y entregar tus pedidos</li>
-        <li>Comunicarnos contigo sobre tu pedido</li>
-        <li>Enviarte información sobre productos (con tu consentimiento)</li>
-        <li>Mejorar nuestros servicios</li>
-      </ul>
-      <h3>3. Protección de datos</h3>
-      <p>Tu información está protegida mediante cifrado SSL y almacenada en servidores seguros. No vendemos ni compartimos tu información personal con terceros.</p>
-      <h3>4. Contraseñas</h3>
-      <p>Las contraseñas se almacenan de forma cifrada. Nunca tenemos acceso a tu contraseña en texto plano.</p>
-      <h3>5. Cookies</h3>
-      <p>Usamos cookies técnicas necesarias para el funcionamiento del sitio. No usamos cookies de seguimiento de publicidad.</p>
-      <h3>6. Tus derechos</h3>
-      <p>Tienes derecho a acceder, corregir o eliminar tu información personal. Para ejercer estos derechos, contáctanos por WhatsApp.</p>
-      <h3>7. Contacto</h3>
-      <p>Para consultas sobre privacidad, contáctanos a través de nuestro WhatsApp oficial.</p>`
+      <h3>1. Información que recopilamos</h3><p>Nombre, correo (si aplica), teléfono, ciudad y dirección de entrega.</p>
+      <h3>2. Uso de la información</h3><p>Para procesar pedidos, coordinar entregas y enviarte información de productos (con tu consentimiento).</p>
+      <h3>3. Protección de datos</h3><p>Tu información está protegida con cifrado SSL. No vendemos ni compartimos datos con terceros.</p>
+      <h3>4. Tus derechos</h3><p>Puedes solicitar acceso, corrección o eliminación de tu información contactándonos por WhatsApp.</p>
+      <h3>5. Cookies</h3><p>Usamos cookies técnicas necesarias para el funcionamiento del sitio, sin seguimiento publicitario.</p>`
   }
 }
 
 function abrirInfo(key) {
-  const content = infoContent[key]
-  if (!content) return
-  document.getElementById('info-title').textContent    = content.titulo
-  document.getElementById('info-body').innerHTML       = content.html
+  const c = infoContent[key]; if (!c) return
+  document.getElementById('info-title').textContent = c.titulo
+  document.getElementById('info-body').innerHTML    = c.html
   document.getElementById('modal-info').classList.add('open')
   document.body.style.overflow = 'hidden'
 }
@@ -614,5 +654,6 @@ function cerrarInfo() {
 
 // ── Inicio ────────────────────────────────────────────
 inicializarAuth()
+renderUserArea()
 actualizarCarritoUI()
 cargarProductos()
