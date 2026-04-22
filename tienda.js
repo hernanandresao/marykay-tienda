@@ -1,3 +1,38 @@
+// ════════════════════════════════════════════════════════
+// DROPDOWN NAV — click para abrir/cerrar
+// ════════════════════════════════════════════════════════
+function initDropdowns() {
+  document.querySelectorAll('.cat-nav-item').forEach(item => {
+    const btn      = item.querySelector('.cat-nav-btn')
+    const dropdown = item.querySelector('.cat-dropdown')
+    if (!btn || !dropdown) return
+
+    // Toggle al hacer click en el botón
+    btn.addEventListener('click', (e) => {
+      const isOpen = item.classList.contains('open')
+      // Cerrar todos los dropdowns
+      document.querySelectorAll('.cat-nav-item.open').forEach(i => i.classList.remove('open'))
+      // Si estaba cerrado, abrir este
+      if (!isOpen) {
+        e.stopPropagation()
+        item.classList.add('open')
+      }
+    })
+
+    // Click en un item del dropdown navega y cierra
+    dropdown.querySelectorAll('.cat-dropdown-item').forEach(di => {
+      di.addEventListener('click', () => {
+        document.querySelectorAll('.cat-nav-item.open').forEach(i => i.classList.remove('open'))
+      })
+    })
+  })
+
+  // Cerrar dropdown al hacer click fuera
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.cat-nav-item.open').forEach(i => i.classList.remove('open'))
+  })
+}
+
 // ═══════════════════════════════════════════════════════
 // MARY KAY HONDURAS — Tienda v5
 // Cambios: dropdown nav, banners dinámicos, variantes,
@@ -174,7 +209,15 @@ function renderBannersNovedades() {
   const wrap = document.getElementById('banners-novedades')
   if (!wrap) return
   const bansNov = banners.filter(b => b.pagina === 'novedades')
-  if (!bansNov.length) { wrap.style.display = 'none'; return }
+  // Si no hay banners en DB, mostrar banners estáticos por defecto
+  if (!bansNov.length) {
+    wrap.innerHTML = `
+      <div class="promo-card promo-mask"><div class="pc-text"><span class="pc-tag">¡NUEVO!</span><h3>Hydrating Cream Mask</h3><p>Tu aliada para hidratar sin enjuagar. 12 horas de hidratación.</p></div><span class="pc-emoji">🫧</span></div>
+      <div class="promo-card promo-gloss"><div class="pc-text"><span class="pc-tag">Edición Limitada</span><h3>Lip Gloss Primavera</h3><p>Lilac Love, Cherry Red y Rose Noir. Hidrata y brilla.</p></div><span class="pc-emoji">💋</span></div>
+      <div class="promo-card promo-bronzer"><div class="pc-text"><span class="pc-tag">Edición Limitada</span><h3>Illuminating Bronzer</h3><p>Medium Glow y Deep Glow para cada tono de piel.</p></div><span class="pc-emoji">☀️</span></div>
+      <div class="promo-card promo-aftersun"><div class="pc-text"><span class="pc-tag">Edición Especial</span><h3>After-Sun Gel</h3><p>¡De vuelta por demanda popular! Calma tu piel post-sol.</p></div><span class="pc-emoji">🌊</span></div>`
+    return
+  }
   wrap.style.display = ''
   wrap.innerHTML = bansNov.map(b => `
     <div class="promo-card ${b.estilo || 'promo-mask'}">
@@ -646,6 +689,7 @@ function cerrarInfo() { document.getElementById('modal-info').classList.remove('
 
 // ── Inicio ─────────────────────────────────────────────
 inicializarAuth()
+initDropdowns()
 renderUserArea()
 actualizarCarritoUI()
 cargarTodo()
