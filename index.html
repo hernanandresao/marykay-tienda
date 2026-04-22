@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mary Kay Honduras — Tienda</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tienda.css">
+</head>
+<body>
+
+<!-- BARRA ANUNCIOS -->
+<div class="announce-bar">
+  <div class="announce-track">
+    <span>🌸 Catálogo Primavera 2026</span><span class="sep">✦</span>
+    <span>💄 Productos 100% Originales</span><span class="sep">✦</span>
+    <span>🚚 Envíos a todo Honduras</span><span class="sep">✦</span>
+    <span>✅ Pago contra entrega</span><span class="sep">✦</span>
+    <span>🌸 Catálogo Primavera 2026</span><span class="sep">✦</span>
+    <span>💄 Productos 100% Originales</span><span class="sep">✦</span>
+    <span>🚚 Envíos a todo Honduras</span><span class="sep">✦</span>
+    <span>✅ Pago contra entrega</span><span class="sep">✦</span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="site-header" id="site-header">
+  <div class="header-inner">
+    <button class="header-brand" onclick="irA('novedades')">
+      <span>💄</span>
+      <div>
+        <div class="brand-name">Mary Kay</div>
+        <div class="brand-sub">Honduras</div>
+      </div>
+    </button>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="search-input" class="search-input" type="text" placeholder="Buscar productos...">
+    </div>
+    <div class="header-right">
+      <div id="user-area"></div>
+      <button class="cart-btn" id="cart-btn" onclick="abrirCarrito()">
+        🛍️ <span class="cart-text">Carrito</span>
+        <span class="cart-badge" id="cart-badge">0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- NAV CATEGORÍAS -->
+  <nav class="cat-nav" id="cat-nav">
+    <!-- Sin dropdown -->
+    <button class="nav-btn" data-page="novedades">✨ Novedades</button>
+
+    <!-- Con dropdown -->
+    <div class="nav-item-dd">
+      <button class="nav-btn" data-page="skincare">Skincare ▾</button>
+      <div class="dropdown" id="dd-skincare">
+        <div class="dd-title">Skincare</div>
+        <button class="dd-item" data-page="skincare" data-sub="clinical">🔬 Clinical Solutions®</button>
+        <button class="dd-item" data-page="skincare" data-sub="timewise">⏱️ TimeWise®</button>
+        <button class="dd-item" data-page="skincare" data-sub="repair">✨ TimeWise Repair®</button>
+        <button class="dd-item" data-page="skincare" data-sub="basica">🧴 Skincare Básica</button>
+        <hr class="dd-sep">
+        <button class="dd-item" data-page="skincare" data-sub="clearproof">💧 Clear Proof®</button>
+        <button class="dd-item" data-page="skincare" data-sub="mkmen">🧔 MKMen®</button>
+        <button class="dd-item" data-page="skincare" data-sub="especial">💎 Soluciones Especiales</button>
+      </div>
+    </div>
+
+    <div class="nav-item-dd">
+      <button class="nav-btn" data-page="maquillaje">Maquillaje ▾</button>
+      <div class="dropdown" id="dd-maquillaje">
+        <div class="dd-title">Maquillaje</div>
+        <button class="dd-item" data-page="maquillaje" data-sub="rostro">🎨 Rostro Impecable</button>
+        <button class="dd-item" data-page="maquillaje" data-sub="ojos">👁️ Ojos</button>
+        <button class="dd-item" data-page="maquillaje" data-sub="labios">💋 Labios y Mejillas</button>
+      </div>
+    </div>
+
+    <div class="nav-item-dd">
+      <button class="nav-btn" data-page="fragancias">Fragancias ▾</button>
+      <div class="dropdown" id="dd-fragancias">
+        <div class="dd-title">Fragancias</div>
+        <button class="dd-item" data-page="fragancias" data-sub="ella">🌸 Para Ella</button>
+        <button class="dd-item" data-page="fragancias" data-sub="el">🧔 Para Él</button>
+      </div>
+    </div>
+
+    <div class="nav-item-dd">
+      <button class="nav-btn" data-page="cuidado">Cuidado Personal ▾</button>
+      <div class="dropdown" id="dd-cuidado">
+        <div class="dd-title">Cuidado Personal</div>
+        <button class="dd-item" data-page="cuidado" data-sub="satin">🛁 Satin Body / Hands / Lips</button>
+        <button class="dd-item" data-page="cuidado" data-sub="corpo">🚿 Geles y Lociones</button>
+      </div>
+    </div>
+
+    <button class="nav-btn" data-page="herramientas">Herramientas</button>
+
+    <div class="nav-item-dd">
+      <button class="nav-btn" data-page="sets">Sets y Regalos ▾</button>
+      <div class="dropdown" id="dd-sets">
+        <div class="dd-title">Sets y Regalos</div>
+        <button class="dd-item" data-page="sets" data-sub="set-tw">⏱️ TimeWise®</button>
+        <button class="dd-item" data-page="sets" data-sub="set-repair">✨ TimeWise Repair®</button>
+        <button class="dd-item" data-page="sets" data-sub="set-skin">🧴 Skin Care Básico</button>
+        <hr class="dd-sep">
+        <button class="dd-item" data-page="sets" data-sub="set-cp">💧 Clear Proof®</button>
+        <button class="dd-item" data-page="sets" data-sub="set-men">🧔 MKMen®</button>
+        <button class="dd-item" data-page="sets" data-sub="set-satin">🎁 Satin & Especiales</button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ══ NOVEDADES ══ -->
+<div class="page" id="page-novedades">
+  <div class="hero hero-pink">
+    <div class="hero-content">
+      <span class="hero-tag">✨ Primavera 2026</span>
+      <h1>Nuevos tonos,<br><span>nuevos favoritos</span></h1>
+      <p>Descubre los últimos lanzamientos de Mary Kay para esta temporada.</p>
+    </div>
+    <div class="hero-deco"><div class="blob b1"></div><div class="blob b2"></div></div>
+  </div>
+  <div class="promo-grid" id="banners-novedades"></div>
+  <div class="section-header"><h2>Productos de Temporada</h2><p>Los más recientes lanzamientos</p></div>
+  <div class="product-grid" id="grid-novedades"></div>
+  <div class="trust-bar">
+    <div class="trust-item"><span>🚚</span><div><b>Envíos a todo Honduras</b><p>Entregamos en todo el país</p></div></div>
+    <div class="trust-item"><span>✅</span><div><b>100% Originales</b><p>Consultora oficial Mary Kay</p></div></div>
+    <div class="trust-item"><span>💬</span><div><b>Asesoría personalizada</b><p>Te ayudamos por WhatsApp</p></div></div>
+    <div class="trust-item"><span>💳</span><div><b>Pago flexible</b><p>Efectivo, tarjeta o transferencia</p></div></div>
+  </div>
+</div>
+
+<!-- ══ SKINCARE ══ -->
+<div class="page" id="page-skincare">
+  <div class="hero hero-green">
+    <div class="hero-content">
+      <span class="hero-tag">Cuidado de la Piel</span>
+      <h1>Tu piel,<br><span>nuestra ciencia</span></h1>
+      <p>Desde rutinas básicas hasta soluciones dermocosméticas avanzadas.</p>
+    </div>
+  </div>
+  <div id="sub-clinical" class="sub-section">
+    <div class="sub-banner sb-clinical"><div class="sb-inner"><div class="sb-logo">Mary Kay Clinical Solutions®</div><h3>Clinical Solutions®</h3><p>Dermocosméticos clínicamente probados: Retinol, Barrier Restore, Dynamic Wrinkle Limiter y Boosters.</p></div></div>
+    <div class="product-grid" id="g-clinical"></div>
+  </div>
+  <div id="sub-timewise" class="sub-section">
+    <div class="sub-banner sb-timewise"><div class="sb-inner"><div class="sb-logo">TimeWise®</div><h3>TimeWise®</h3><p>La línea anti-edad #1 de Mary Kay con el Complejo TimeWise 3D®. Scientificamente comprobada.</p><ul class="sb-feats"><li>✓ Complejo TimeWise 3D®</li><li>✓ Sello Good Housekeeping</li></ul></div></div>
+    <div class="product-grid" id="g-timewise"></div>
+  </div>
+  <div id="sub-repair" class="sub-section">
+    <div class="sub-banner sb-repair"><div class="sb-inner"><div class="sb-logo">TimeWise Repair®</div><h3>TimeWise Repair®</h3><p>Lo más avanzado para señales visibles de envejecimiento: líneas profundas, firmeza y elasticidad.</p></div></div>
+    <div class="product-grid" id="g-repair"></div>
+  </div>
+  <div id="sub-basica" class="sub-section">
+    <div class="sub-banner sb-basica"><div class="sb-inner"><h3>Skincare Básica</h3><p>4 pasos esenciales para toda piel. Limpia, exfolia, tonifica e hidrata. Apta para piel sensible.</p></div></div>
+    <div class="product-grid" id="g-basica"></div>
+  </div>
+  <div id="sub-clearproof" class="sub-section">
+    <div class="sub-banner sb-blue"><div class="sb-inner"><div class="sb-logo">Clear Proof®</div><h3>Clear Proof® — Control del Acné</h3><p>Comprobado clínicamente. Elimina imperfecciones sin irritación y deja la piel más clara en 7 días.</p></div></div>
+    <div class="product-grid" id="g-clearproof"></div>
+  </div>
+  <div id="sub-mkmen" class="sub-section">
+    <div class="sub-banner sb-dark"><div class="sb-inner"><div class="sb-logo">MKMen®</div><h3>MKMen® — Para Él</h3><p>Respaldado científicamente. 3 pasos sencillos para una piel saludable.</p></div></div>
+    <div class="product-grid" id="g-mkmen"></div>
+  </div>
+  <div id="sub-especial" class="sub-section">
+    <div class="sub-banner sb-gold"><div class="sb-inner"><h3>Soluciones Especiales</h3><p>Productos para ojos, protección solar, hidratación profunda y cuidados extra.</p></div></div>
+    <div class="product-grid" id="g-especial"></div>
+  </div>
+</div>
+
+<!-- ══ MAQUILLAJE ══ -->
+<div class="page" id="page-maquillaje">
+  <div class="hero hero-purple">
+    <div class="hero-content">
+      <span class="hero-tag">Maquillaje</span>
+      <h1>Exprésate<br><span>con color</span></h1>
+      <p>Colores intensos, duraderos y fórmulas que cuidan tu piel mientras te maquillan.</p>
+    </div>
+  </div>
+  <div id="sub-rostro" class="sub-section">
+    <div class="sub-banner sb-purple"><div class="sb-inner"><h3>Rostro Impecable</h3><p>Bases, correctores, polvos y primers para un cutis perfecto todo el día.</p></div></div>
+    <div class="product-grid" id="g-rostro"></div>
+  </div>
+  <div id="sub-ojos" class="sub-section">
+    <div class="sub-banner sb-blue"><div class="sb-inner"><h3>Ojos</h3><p>Chromafusion®, Shimmer Sticks, delineadores y máscaras para una mirada irresistible.</p></div></div>
+    <div class="product-grid" id="g-ojos"></div>
+  </div>
+  <div id="sub-labios" class="sub-section">
+    <div class="sub-banner sb-pink"><div class="sb-inner"><h3>Labios y Mejillas</h3><p>Labiales, gloss, delineadores y Chromafusion® para labios y mejillas perfectas.</p></div></div>
+    <div class="product-grid" id="g-labios"></div>
+  </div>
+</div>
+
+<!-- ══ FRAGANCIAS ══ -->
+<div class="page" id="page-fragancias">
+  <div class="hero hero-gold">
+    <div class="hero-content">
+      <span class="hero-tag">Fragancias</span>
+      <h1>Tu firma<br><span>olfativa</span></h1>
+      <p>Una fragancia para cada momento, estado de ánimo y personalidad.</p>
+    </div>
+  </div>
+  <div id="sub-ella" class="sub-section">
+    <div class="sub-banner sb-gold"><div class="sb-inner"><h3>Para Ella</h3><p>De florales sutiles a orientales intensos. Cada fragancia Mary Kay es una experiencia única.</p></div></div>
+    <div class="product-grid" id="g-ella"></div>
+  </div>
+  <div id="sub-el" class="sub-section">
+    <div class="sub-banner sb-blue"><div class="sb-inner"><h3>Para Él</h3><p>Frescas, maderas y modernas. Fragancias MKMen® para el hombre de hoy.</p></div></div>
+    <div class="product-grid" id="g-el"></div>
+  </div>
+</div>
+
+<!-- ══ CUIDADO PERSONAL ══ -->
+<div class="page" id="page-cuidado">
+  <div class="hero hero-teal">
+    <div class="hero-content">
+      <span class="hero-tag">Cuidado Personal</span>
+      <h1>De pies<br><span>a cabeza</span></h1>
+      <p>Rituales de cuidado para todo el cuerpo. Karité, aromas y fórmulas hidratantes.</p>
+    </div>
+  </div>
+  <div id="sub-satin" class="sub-section">
+    <div class="sub-banner sb-teal"><div class="sb-inner"><h3>Satin Body® / Hands® / Lips®</h3><p>El lujo del karité para manos, cuerpo y labios. Suavidad duradera con fragancia White Tea & Citrus.</p></div></div>
+    <div class="product-grid" id="g-satin"></div>
+  </div>
+  <div id="sub-corpo" class="sub-section">
+    <div class="sub-banner sb-orange"><div class="sb-inner"><h3>Geles, Lociones y Cuidado</h3><p>Geles de ducha aromáticos, lociones hidratantes y productos especiales para el cuidado diario.</p></div></div>
+    <div class="product-grid" id="g-corpo"></div>
+  </div>
+</div>
+
+<!-- ══ HERRAMIENTAS ══ -->
+<div class="page" id="page-herramientas">
+  <div class="hero hero-gray">
+    <div class="hero-content">
+      <span class="hero-tag">Herramientas de Belleza</span>
+      <h1>Las herramientas<br><span>marcan la diferencia</span></h1>
+      <p>Pinceles profesionales, esponjas y accesorios para un maquillaje siempre impecable.</p>
+    </div>
+  </div>
+  <div class="sub-section" style="padding-top:8px">
+    <div class="product-grid" id="g-herramientas"></div>
+  </div>
+</div>
+
+<!-- ══ SETS Y REGALOS ══ -->
+<div class="page" id="page-sets">
+  <div class="hero hero-orange">
+    <div class="hero-content">
+      <span class="hero-tag">Sets y Regalos</span>
+      <h1>El regalo<br><span>perfecto</span></h1>
+      <p>Juegos completos con ahorro. El regalo ideal para cualquier ocasión.</p>
+    </div>
+  </div>
+  <div id="sub-set-tw" class="sub-section">
+    <div class="sub-banner sb-pink"><div class="sb-inner"><div class="sb-logo">TimeWise®</div><h3>Juegos Milagrosos™ TimeWise®</h3><p>La línea anti-edad #1 en juegos completos. <strong>¡Ahorra al comprar el juego!</strong></p><ul class="sb-feats"><li>✓ Complejo TimeWise 3D®</li><li>✓ Sello Good Housekeeping</li></ul></div></div>
+    <div class="product-grid" id="g-set-tw"></div>
+  </div>
+  <div id="sub-set-repair" class="sub-section">
+    <div class="sub-banner sb-repair"><div class="sb-inner"><div class="sb-logo">TimeWise Repair®</div><h3>Sets TimeWise Repair® Volu-Firm®</h3><p>Lo más avanzado para señales avanzadas del envejecimiento. <strong>¡Ahorra L31 al comprar!</strong></p></div></div>
+    <div class="product-grid" id="g-set-repair"></div>
+  </div>
+  <div id="sub-set-skin" class="sub-section">
+    <div class="sub-banner sb-basica"><div class="sb-inner"><h3>Regímenes Básicos de Skincare</h3><p>Los 4 pasos esenciales en un solo kit. Hidratante o matificante, tú eliges.</p></div></div>
+    <div class="product-grid" id="g-set-skin"></div>
+  </div>
+  <div id="sub-set-cp" class="sub-section">
+    <div class="sub-banner sb-blue"><div class="sb-inner"><div class="sb-logo">Clear Proof®</div><h3>Sistema Clear Proof® para el Acné</h3><p>4 pasos completos. Comprobado clínicamente en 7 días. <strong>¡Ahorra L18!</strong></p></div></div>
+    <div class="product-grid" id="g-set-cp"></div>
+  </div>
+  <div id="sub-set-men" class="sub-section">
+    <div class="sub-banner sb-dark"><div class="sb-inner"><div class="sb-logo">MKMen®</div><h3>Régimen MKMen®</h3><p>3 pasos efectivos para él. Incluye limpiador, crema de afeitar e hidratante.</p></div></div>
+    <div class="product-grid" id="g-set-men"></div>
+  </div>
+  <div id="sub-set-satin" class="sub-section">
+    <div class="sub-banner sb-gold"><div class="sb-inner"><div class="sb-logo">Satin®</div><h3>Sets Satin® y Ediciones Especiales</h3><p>Kits perfectos para regalar. Manos suaves, labios hidratados y cuerpo nutrido.</p></div></div>
+    <div class="product-grid" id="g-set-satin"></div>
+  </div>
+</div>
+
+<!-- ══ RESULTADOS DE BÚSQUEDA ══ -->
+<div class="page" id="page-search" style="display:none">
+  <div style="max-width:1200px;margin:32px auto;padding:0 24px">
+    <h2 id="search-title" style="font-size:20px;font-weight:800;color:#1f2937;margin-bottom:20px"></h2>
+    <div class="product-grid" id="g-search"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- PROMO WA -->
+<section class="promo-wa">
+  <div class="promo-wa-inner">
+    <div><h2>¿Necesitas asesoría personalizada?</h2><p>Te ayudamos a encontrar los productos perfectos para tu tipo de piel.</p></div>
+    <a href="https://wa.me/50498589303" target="_blank" class="btn-wa-promo">📱 Escríbenos por WhatsApp</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div><div class="footer-brand">💄 Mary Kay Honduras</div><p class="footer-desc">Consultora oficial Mary Kay. Productos 100% originales con envíos a todo Honduras.</p>
+      <div class="footer-social"><a href="#" class="soc-btn">f</a><a href="#" class="soc-btn">ig</a><a href="https://wa.me/50498589303" class="soc-btn" target="_blank">wa</a></div>
+    </div>
+    <div><h4>Categorías</h4><ul class="f-links">
+      <li><a onclick="irA('novedades')">✨ Novedades</a></li>
+      <li><a onclick="irA('skincare')">Skincare</a></li>
+      <li><a onclick="irA('maquillaje')">Maquillaje</a></li>
+      <li><a onclick="irA('fragancias')">Fragancias</a></li>
+      <li><a onclick="irA('cuidado')">Cuidado Personal</a></li>
+      <li><a onclick="irA('herramientas')">Herramientas</a></li>
+      <li><a onclick="irA('sets')">Sets y Regalos</a></li>
+    </ul></div>
+    <div><h4>Información</h4><ul class="f-links">
+      <li><a onclick="abrirInfo('envios')">Envíos y entregas</a></li>
+      <li><a onclick="abrirInfo('pagos')">Métodos de pago</a></li>
+      <li><a onclick="abrirInfo('cambios')">Política de cambios</a></li>
+    </ul></div>
+    <div><h4>Contacto</h4><ul class="f-links">
+      <li>📱 WhatsApp: +504 9858-9303</li>
+      <li>📍 Honduras</li>
+    </ul>
+    <a href="https://wa.me/50498589303" target="_blank" class="footer-wa-btn">📱 Chatear ahora</a></div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Mary Kay Honduras · Todos los derechos reservados</span>
+    <span>Consultora oficial · Catálogo Primavera 2026</span>
+  </div>
+</footer>
+
+<!-- BOTÓN FLOTANTE WA -->
+<a class="wa-float" href="https://wa.me/50498589303" target="_blank">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<!-- MODAL PRODUCTO -->
+<div id="modal-prod" class="modal-overlay" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal-box">
+    <button class="modal-x" onclick="cerrarModal()">×</button>
+    <div class="modal-img-side">
+      <div class="modal-img-wrap" id="modal-img-wrap"><div class="modal-img-ph">💄</div></div>
+    </div>
+    <div class="modal-info-side">
+      <div class="modal-cat" id="modal-cat"></div>
+      <h2 class="modal-nombre" id="modal-nombre"></h2>
+      <div class="modal-precio" id="modal-precio"></div>
+      <div class="modal-stock" id="modal-stock"></div>
+      <!-- VARIANTES -->
+      <div id="modal-variantes"></div>
+      <!-- CANTIDAD -->
+      <div class="qty-row">
+        <span class="qty-label">Cantidad</span>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="cambiarQty(-1)">−</button>
+          <span class="qty-val" id="qty-val">1</span>
+          <button class="qty-btn" onclick="cambiarQty(1)">+</button>
+        </div>
+      </div>
+      <button class="btn-add-cart" id="btn-add-cart" onclick="agregarAlCarrito()">🛍️ Agregar al carrito</button>
+      <div class="modal-meta">
+        <span>✓ Producto Mary Kay 100% original</span>
+        <span>✓ Envío a todo Honduras</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CARRITO LATERAL -->
+<div id="cart-overlay" class="cart-overlay" onclick="if(event.target===this)cerrarCarrito()">
+  <aside class="cart-drawer">
+    <div class="cart-header">
+      <h3>🛍️ Tu carrito</h3>
+      <button onclick="cerrarCarrito()">×</button>
+    </div>
+    <div class="cart-body" id="cart-body"></div>
+    <div class="cart-footer" id="cart-footer" style="display:none">
+      <div class="cart-total-row"><span>Total</span><strong id="cart-total">L 0.00</strong></div>
+      <div class="cart-uds" id="cart-uds"></div>
+      <button class="btn-checkout" onclick="abrirCheckout()">Hacer pedido →</button>
+      <button class="btn-seguir" onclick="cerrarCarrito()">← Seguir comprando</button>
+    </div>
+  </aside>
+</div>
+
+<!-- CHECKOUT -->
+<div id="checkout-overlay" class="modal-overlay" onclick="if(event.target===this)cerrarCheckout()">
+  <div class="checkout-box">
+    <button class="back-btn" onclick="cerrarCheckout();abrirCarrito()">← Volver</button>
+    <h2>Completa tu pedido</h2>
+    <div class="checkout-grid">
+      <!-- Resumen -->
+      <div class="checkout-resumen" id="checkout-resumen"></div>
+      <!-- Formulario -->
+      <div class="checkout-form">
+        <h3>Tus datos</h3>
+        <div id="co-field-errors" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px"></div>
+        <div class="form-row">
+          <div class="fg"><label>Nombre completo *</label><input id="co-nombre" type="text" placeholder="Tu nombre"></div>
+          <div class="fg"><label>WhatsApp *</label><input id="co-tel" type="tel" placeholder="9999-9999"></div>
+        </div>
+        <div class="fg"><label>Ciudad / Departamento *</label><input id="co-ciudad" type="text" placeholder="Tegucigalpa"></div>
+        <div class="fg"><label>Dirección de entrega *</label><textarea id="co-notas" placeholder="Colonia, calle, referencias..." style="min-height:64px"></textarea></div>
+        <div class="fg">
+          <label>Método de pago</label>
+          <select id="co-pago" onchange="toggleCardPanel(this.value)">
+            <option value="Efectivo al recibir">Efectivo al recibir</option>
+            <option value="Tarjeta">Tarjeta de crédito/débito</option>
+            <option value="Transferencia BAC">Transferencia BAC</option>
+            <option value="PayPal">PayPal</option>
+          </select>
+        </div>
+        <!-- Panel tarjeta -->
+        <div id="card-panel" class="card-panel" style="display:none">
+          <h4>💳 Datos de la tarjeta</h4>
+          <div class="fg"><label>Número de tarjeta</label><input id="card-num" type="text" placeholder="1234 5678 9012 3456" maxlength="19"></div>
+          <div class="form-row">
+            <div class="fg"><label>Vencimiento</label><input id="card-exp" type="text" placeholder="MM/AA" maxlength="5"></div>
+            <div class="fg"><label>CVV</label><input id="card-cvv" type="text" placeholder="123" maxlength="4"></div>
+          </div>
+          <div class="card-secure">🔒 Pago seguro con cifrado SSL</div>
+        </div>
+        <!-- Mensajes promocionales -->
+        <label class="registro-check promo-check">
+          <input type="checkbox" id="co-promo" checked>
+          <div><strong>📣 Recibir mensajes promocionales</strong><p>Ofertas, novedades y lanzamientos por WhatsApp</p></div>
+        </label>
+        <!-- Registro opcional -->
+        <label class="registro-check">
+          <input type="checkbox" id="co-registrar">
+          <div><strong>Crear cuenta (opcional)</strong><p>Guarda tu historial de pedidos</p></div>
+        </label>
+        <div id="reg-extra" style="display:none">
+          <div class="fg"><label>Email</label><input id="co-email" type="email" placeholder="tucorreo@ejemplo.com"></div>
+          <div class="form-row">
+            <div class="fg"><label>Contraseña</label><input id="co-pass" type="password" placeholder="Mín. 6 caracteres"></div>
+            <div class="fg"><label>Confirmar</label><input id="co-pass2" type="password" placeholder="Repite la contraseña"></div>
+          </div>
+        </div>
+        <button class="btn-place-order" id="btn-place" onclick="hacerPedido()">✅ Confirmar pedido</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRMACIÓN -->
+<div id="confirm-overlay" class="modal-overlay" style="display:none">
+  <div class="confirm-box">
+    <div class="confirm-check">✓</div>
+    <h2>¡Pedido confirmado!</h2>
+    <div class="confirm-num" id="confirm-num">P-0001</div>
+    <p>Gracias <strong id="confirm-name"></strong>, recibimos tu pedido por <strong id="confirm-total"></strong>.</p>
+    <!-- Factura resumen (solo métodos que no son tarjeta) -->
+    <div id="confirm-factura" style="display:none;width:100%;background:#fdf4ff;border:1px solid #e9d5ff;border-radius:10px;padding:14px;margin:10px 0;text-align:left;font-size:13px"></div>
+    <a class="btn-wa-confirm" id="btn-wa-confirm" href="#" target="_blank">📱 Enviar factura por WhatsApp</a>
+    <div class="btn-wa-confirm" id="card-ok" style="display:none;background:#f0fdf4;color:#16a34a;border-color:#bbf7d0">💳 Pago procesado exitosamente</div>
+    <button class="btn-seguir-comp" onclick="document.getElementById('confirm-overlay').style.display='none'">Seguir comprando</button>
+  </div>
+</div>
+
+<!-- MODAL AUTH -->
+<div id="auth-overlay" class="modal-overlay" onclick="if(event.target===this)cerrarAuth()">
+  <div class="auth-box">
+    <button class="modal-x" onclick="cerrarAuth()">×</button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="authTab('login')">Iniciar sesión</button>
+      <button class="auth-tab" id="tab-reg" onclick="authTab('reg')">Crear cuenta</button>
+    </div>
+    <div id="panel-login">
+      <div class="auth-head"><h2>¡Bienvenida! 💄</h2><p>Inicia sesión para ver tu historial</p></div>
+      <div id="alert-login"></div>
+      <div class="fg"><label>Email</label><input id="login-email" type="email" placeholder="tucorreo@ejemplo.com"></div>
+      <div class="fg"><label>Contraseña</label><input id="login-pass" type="password"></div>
+      <button class="btn-auth" onclick="doLogin()">Iniciar sesión</button>
+      <p class="auth-switch">¿No tienes cuenta? <a onclick="authTab('reg')">Crear cuenta</a></p>
+    </div>
+    <div id="panel-reg" style="display:none">
+      <div class="auth-head"><h2>Crear cuenta 🌸</h2><p>Recibe ofertas y lleva tu historial</p></div>
+      <div id="alert-reg"></div>
+      <div class="form-row">
+        <div class="fg"><label>Nombre *</label><input id="reg-nombre" type="text"></div>
+        <div class="fg"><label>WhatsApp *</label><input id="reg-tel" type="tel"></div>
+      </div>
+      <div class="fg"><label>Email *</label><input id="reg-email" type="email"></div>
+      <div class="form-row">
+        <div class="fg"><label>Contraseña *</label><input id="reg-pass" type="password"></div>
+        <div class="fg"><label>Confirmar *</label><input id="reg-pass2" type="password"></div>
+      </div>
+      <button class="btn-auth" onclick="doRegister()">Crear mi cuenta</button>
+      <p class="auth-switch">¿Ya tienes cuenta? <a onclick="authTab('login')">Iniciar sesión</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INFO -->
+<div id="info-overlay" class="modal-overlay" onclick="if(event.target===this)cerrarInfo()">
+  <div class="info-box">
+    <div class="info-head">
+      <h2 id="info-title"></h2>
+      <button onclick="cerrarInfo()">×</button>
+    </div>
+    <div class="info-body" id="info-body"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="tienda.js"></script>
+<script>
+  document.getElementById('co-registrar').addEventListener('change', function(){
+    document.getElementById('reg-extra').style.display = this.checked ? 'block' : 'none'
+  })
+</script>
+</body>
+</html>
