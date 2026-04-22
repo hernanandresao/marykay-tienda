@@ -1,37 +1,41 @@
-// ════════════════════════════════════════════════════════
-// DROPDOWN NAV — click para abrir/cerrar
-// ════════════════════════════════════════════════════════
-function initDropdowns() {
-  document.querySelectorAll('.cat-nav-item').forEach(item => {
-    const btn      = item.querySelector('.cat-nav-btn')
-    const dropdown = item.querySelector('.cat-dropdown')
-    if (!btn || !dropdown) return
+closeNavDropdown()
 
-    // Toggle al hacer click en el botón
-    btn.addEventListener('click', (e) => {
-      const isOpen = item.classList.contains('open')
-      // Cerrar todos los dropdowns
-      document.querySelectorAll('.cat-nav-item.open').forEach(i => i.classList.remove('open'))
-      // Si estaba cerrado, abrir este
-      if (!isOpen) {
-        e.stopPropagation()
-        item.classList.add('open')
-      }
-    })
+      // Position panel below the button
+      const rect = btn.getBoundingClientRect()
+      panel.innerHTML = dropdown.innerHTML
+      panel.style.top  = (rect.bottom + 4) + 'px'
+      panel.style.left = rect.left + 'px'
+      panel.style.display = 'block'
 
-    // Click en un item del dropdown navega y cierra
-    dropdown.querySelectorAll('.cat-dropdown-item').forEach(di => {
-      di.addEventListener('click', () => {
-        document.querySelectorAll('.cat-nav-item.open').forEach(i => i.classList.remove('open'))
+      // Re-attach click handlers to the cloned items
+      panel.querySelectorAll('.cat-dropdown-item').forEach(di => {
+        di.addEventListener('click', () => closeNavDropdown())
       })
+
+      btn.classList.add('active-drop')
+      activeDropdown = btn
     })
   })
 
-  // Cerrar dropdown al hacer click fuera
-  document.addEventListener('click', () => {
-    document.querySelectorAll('.cat-nav-item.open').forEach(i => i.classList.remove('open'))
-  })
+  // Click outside → close
+  document.addEventListener('click', () => closeNavDropdown())
+
+  // Scroll/resize → reposition (or close)
+  window.addEventListener('scroll', () => closeNavDropdown(), { passive: true })
+  window.addEventListener('resize', () => closeNavDropdown(), { passive: true })
 }
+
+function closeNavDropdown() {
+  const panel = document.getElementById('nav-dropdown-panel')
+  if (panel) panel.style.display = 'none'
+  if (activeDropdown) {
+    activeDropdown.classList.remove('active-drop')
+    activeDropdown = null
+  }
+}
+
+
+
 
 // ═══════════════════════════════════════════════════════
 // MARY KAY HONDURAS — Tienda v5
@@ -145,6 +149,7 @@ function cambiarPagina(pagina, subseccion) {
   if (busquedaActiva) limpiarBusqueda()
 
   document.querySelectorAll('.cat-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === pagina))
+  if (window._updateNavActive) window._updateNavActive(pagina)
   document.querySelectorAll('.cat-page').forEach(p => p.classList.remove('active'))
   const pg = document.getElementById('page-' + pagina)
   if (pg) pg.classList.add('active')
@@ -319,16 +324,28 @@ function abrirModalProducto(id) {
   stockEl.textContent = p.alerta==='AGOTADO'?'Sin stock disponible':p.alerta==='BAJO'?`¡Solo quedan ${p.stock_actual} unidades!`:`Disponible · ${p.stock_actual} en stock`
   stockEl.style.color = p.alerta==='AGOTADO'?'var(--red)':p.alerta==='BAJO'?'var(--amber)':'var(--green)'
 
-  // Variantes
+  // Variantes — agrupar por nombre_variante (puede haber varios grupos)
   const varis = variantesMap[id] || []
   const varSection = document.getElementById('pm-variantes')
   if (varis.length) {
-    const nombre = varis[0].nombre_variante || 'Opción'
-    varSection.innerHTML = `
-      <label>${esc(nombre)}</label>
-      <div class="variantes-grid">
-        ${varis.map(v => `<button class="variante-btn" onclick="seleccionarVariante('${v.id}',this)" data-vid="${v.id}" data-valor="${esc(v.valor)}" data-precio="${v.precio_extra||0}">${esc(v.valor)}</button>`).join('')}
-      </div>`
+    // Agrupar por nombre_variante
+    const grupos = {}
+    varis.forEach(v => {
+      const grp = v.nombre_variante || 'Opción'
+      if (!grupos[grp]) grupos[grp] = []
+      grupos[grp].push(v)
+    })
+    varSection.innerHTML = Object.entries(grupos).map(([nombre, opciones]) => `
+      <div class="pm-variante-grupo">
+        <label>${esc(nombre)}</label>
+        <div class="variantes-grid">
+          ${opciones.map(v => `<button class="variante-btn" data-grp="${esc(nombre)}" data-vid="${v.id}" data-valor="${esc(v.valor)}" data-precio="${v.precio_extra||0}">${esc(v.valor)}</button>`).join('')}
+        </div>
+      </div>`).join('')
+    // Attach click handlers
+    varSection.querySelectorAll('.variante-btn').forEach(btn => {
+      btn.addEventListener('click', () => seleccionarVariante(btn))
+    })
     varSection.style.display = 'block'
   } else {
     varSection.innerHTML = ''
@@ -353,14 +370,28 @@ function abrirModalProducto(id) {
   document.body.style.overflow = 'hidden'
 }
 
-function seleccionarVariante(vid, btn) {
-  document.querySelectorAll('.variante-btn').forEach(b => b.classList.remove('selected'))
+function seleccionarVariante(btn) {
+  const grp = btn.dataset.grp
+  // Deselect only buttons in the same group
+  document.querySelectorAll(`.variante-btn[data-grp="${grp}"]`).forEach(b => b.classList.remove('selected'))
   btn.classList.add('selected')
-  const v = (variantesMap[productoModal?.id] || []).find(x => x.id === vid)
-  varianteSeleccionada = v
-  // Actualizar precio si hay precio extra
-  if (v && productoModal) {
-    const total = Number(productoModal.precio_venta) + Number(v.precio_extra || 0)
+
+  // Build variante seleccionada from all selected buttons across all groups
+  const seleccionadas = [...document.querySelectorAll('.variante-btn.selected')]
+  const textos = seleccionadas.map(b => `${b.dataset.grp}: ${b.dataset.valor}`)
+  const precioExtra = seleccionadas.reduce((s, b) => s + Number(b.dataset.precio || 0), 0)
+
+  varianteSeleccionada = {
+    id:              btn.dataset.vid,
+    nombre_variante: grp,
+    valor:           btn.dataset.valor,
+    precio_extra:    precioExtra,
+    texto:           textos.join(' · ')
+  }
+
+  // Recalcular precio
+  if (productoModal) {
+    const total = Number(productoModal.precio_venta) + precioExtra
     document.getElementById('pm-precio').textContent = fmt(total)
   }
 }
@@ -380,13 +411,20 @@ function cambiarQtyModal(delta) {
 function agregarDesdeModal() {
   if (!productoModal || productoModal.alerta === 'AGOTADO') return
   const varis = variantesMap[productoModal.id] || []
-  if (varis.length && !varianteSeleccionada) {
-    alert(`Por favor elige una opción de ${varis[0].nombre_variante || 'variante'} antes de agregar al carrito.`)
-    return
+  // Verificar que todos los grupos tengan selección
+  if (varis.length) {
+    const grupos = [...new Set(varis.map(v => v.nombre_variante || 'Opción'))]
+    const seleccionadas = document.querySelectorAll('#pm-variantes .variante-btn.selected')
+    const gruposSeleccionados = new Set([...seleccionadas].map(b => b.dataset.grp))
+    const faltantes = grupos.filter(g => !gruposSeleccionados.has(g))
+    if (faltantes.length) {
+      alert(`Por favor elige: ${faltantes.join(', ')}`)
+      return
+    }
   }
   const precioFinal = Number(productoModal.precio_venta) + Number(varianteSeleccionada?.precio_extra || 0)
-  const varTexto    = varianteSeleccionada ? `${varianteSeleccionada.nombre_variante}: ${varianteSeleccionada.valor}` : null
-  const key         = productoModal.id + (varianteSeleccionada ? '-'+varianteSeleccionada.id : '')
+  const varTexto    = varianteSeleccionada?.texto || null
+  const key         = productoModal.id + (varTexto ? '-' + varTexto.replace(/[^a-z0-9]/gi,'') : '')
 
   const ex = carrito.find(x => x.key === key)
   for (let i = 0; i < qtyModal; i++) {
@@ -687,9 +725,88 @@ function abrirInfo(key) {
 }
 function cerrarInfo() { document.getElementById('modal-info').classList.remove('open');document.body.style.overflow='' }
 
+
+// ════════════════════════════════════════════════════════
+// DROPDOWN NAV — data-attribute driven, position:fixed
+// ════════════════════════════════════════════════════════
+function initNav() {
+  const nav = document.getElementById('cat-nav')
+  if (!nav) return
+
+  // Position dropdowns using fixed coordinates
+  function positionDropdown(item) {
+    const dropdown = item.querySelector('.cat-dropdown')
+    if (!dropdown) return
+    const rect = item.getBoundingClientRect()
+    const header = document.querySelector('.site-header')
+    const headerBottom = header ? header.getBoundingClientRect().bottom : 104
+    dropdown.style.top  = headerBottom + 'px'
+    dropdown.style.left = rect.left + 'px'
+  }
+
+  // Close all dropdowns
+  function closeAll() {
+    nav.querySelectorAll('.cat-nav-item.open').forEach(i => i.classList.remove('open'))
+  }
+
+  // Wire up buttons using data-attributes — NO inline onclick needed
+  nav.querySelectorAll('.cat-nav-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const item    = btn.closest('.cat-nav-item')
+      const page    = btn.dataset.page
+      const subsec  = btn.dataset.subsec || ''
+      const hasDrop = item.classList.contains('has-dropdown')
+
+      if (hasDrop) {
+        // Toggle dropdown
+        const wasOpen = item.classList.contains('open')
+        closeAll()
+        if (!wasOpen) {
+          positionDropdown(item)
+          item.classList.add('open')
+        }
+      } else {
+        // Navigate directly
+        closeAll()
+        cambiarPagina(page, subsec || null)
+      }
+    })
+  })
+
+  // Wire up dropdown items
+  nav.querySelectorAll('.cat-dropdown-item').forEach(di => {
+    di.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const page   = di.dataset.page
+      const subsec = di.dataset.subsec || null
+      closeAll()
+      cambiarPagina(page, subsec)
+    })
+  })
+
+  // Close on outside click
+  document.addEventListener('click', closeAll)
+
+  // Update active state
+  function updateActive(page) {
+    nav.querySelectorAll('.cat-nav-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.page === page)
+    })
+  }
+  window._updateNavActive = updateActive
+}
+
+// ════════════════════════════════════════════════════════
+// VARIANTES — agregar desde inventario (SQL directo)
+// ════════════════════════════════════════════════════════
+// Las variantes se definen en Supabase tabla producto_variantes
+// Desde el modal de producto en la tienda se muestran automáticamente
+// via variantesMap que se carga en cargarTodo()
+
 // ── Inicio ─────────────────────────────────────────────
 inicializarAuth()
-initDropdowns()
+initNav()
 renderUserArea()
 actualizarCarritoUI()
 cargarTodo()
