@@ -135,39 +135,8 @@
     </div>
 
     <!-- Banners promocionales -->
-    <div class="promo-banners-grid">
-      <div class="promo-card promo-mask">
-        <div class="pc-text">
-          <span class="pc-tag">¡NUEVO!</span>
-          <h3>Hydrating Cream Mask</h3>
-          <p>Tu aliada para hidratar sin enjuagar. Hidrata por 12 horas con manteca de karité y ácido hialurónico.</p>
-        </div>
-        <span class="pc-emoji">🫧</span>
-      </div>
-      <div class="promo-card promo-gloss">
-        <div class="pc-text">
-          <span class="pc-tag">Edición Limitada</span>
-          <h3>Lip Gloss Primavera</h3>
-          <p>Tres nuevos tonos irresistibles: Lilac Love, Cherry Red y Rose Noir. Hidrata y brilla.</p>
-        </div>
-        <span class="pc-emoji">💋</span>
-      </div>
-      <div class="promo-card promo-bronzer">
-        <div class="pc-text">
-          <span class="pc-tag">Edición Limitada</span>
-          <h3>Illuminating Bronzer</h3>
-          <p>El resplandor dorado que todas desean. Medium Glow y Deep Glow para cada tono de piel.</p>
-        </div>
-        <span class="pc-emoji">☀️</span>
-      </div>
-      <div class="promo-card promo-aftersun">
-        <div class="pc-text">
-          <span class="pc-tag">Edición Especial</span>
-          <h3>After-Sun Replenishing Gel</h3>
-          <p>¡De vuelta por demanda popular! Calma y revitaliza tu piel después del sol.</p>
-        </div>
-        <span class="pc-emoji">🌊</span>
-      </div>
+    <div class="promo-banners-grid" id="banners-novedades">
+      <!-- Los banners se cargan dinámicamente desde Supabase -->
     </div>
 
     <div class="section-title-row">
@@ -391,7 +360,7 @@
       </div>
     </div>
     <div class="sub-section">
-      <div class="products-grid" id="grid-herramientas-herramientas"></div>
+      <div class="products-grid" id="grid-herramientas"></div>
     </div>
   </div>
 
@@ -570,6 +539,9 @@
       <h2 class="pm-nombre" id="pm-nombre"></h2>
       <div class="pm-precio" id="pm-precio"></div>
       <div class="pm-stock" id="pm-stock"></div>
+
+      <!-- Variantes (tono, tipo de piel, etc) -->
+      <div class="pm-variantes" id="pm-variantes" style="display:none"></div>
       <div class="pm-qty-row">
         <label class="pm-qty-label">Cantidad</label>
         <div class="pm-qty-ctrl">
