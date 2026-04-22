@@ -1,513 +1,518 @@
-closeNavDropdown()
+// MARY KAY HONDURAS — Tienda v6
+// Reescritura completa desde cero
 
-      // Position panel below the button
-      const rect = btn.getBoundingClientRect()
-      panel.innerHTML = dropdown.innerHTML
-      panel.style.top  = (rect.bottom + 4) + 'px'
-      panel.style.left = rect.left + 'px'
-      panel.style.display = 'block'
+const SB_URL = 'https://knoxphxvmjvkdioeopbi.supabase.co'
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtub3hwaHh2bWp2a2Rpb2VvcGJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MzUxNjEsImV4cCI6MjA5MTQxMTE2MX0.4XSZGDibY6z0wdA0UysExc1Yt-yMmckfNs7nxU3fZUo'
+const WA = '50498589303'
 
-      // Re-attach click handlers to the cloned items
-      panel.querySelectorAll('.cat-dropdown-item').forEach(di => {
-        di.addEventListener('click', () => closeNavDropdown())
+const { createClient } = supabase
+const db = createClient(SB_URL, SB_KEY)
+const L = n => `L ${Number(n||0).toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2})}`
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+
+// ─── Estado ──────────────────────────────────────────────
+let productos  = []   // todos los productos activos de v_productos
+let variantes  = {}   // { productoId: [variante,...] }
+let banners    = []   // banners de la tabla banners
+let carrito    = []   // items del carrito
+let pActual    = 'novedades'
+let prodModal  = null
+let qtyModal   = 1
+let varSel     = null   // variante seleccionada
+let userActual = null
+let clienteAct = null
+
+// ─── Mapa: subcategoria DB → id de grid en HTML ─────────
+const SUBCAT_GRID = {
+  'Clinical Solutions': 'g-clinical',
+  'TimeWise':           'g-timewise',
+  'TimeWise Repair':    'g-repair',
+  'Skincare Básica':    'g-basica',
+  'Clear Proof':        'g-clearproof',
+  'MKMen':              'g-mkmen',
+  'Soluciones Especiales': 'g-especial',
+  'Rostro':             'g-rostro',
+  'Ojos':               'g-ojos',
+  'Labios':             'g-labios',
+  'Chromafusion':       'g-ojos',   // mismo grid que ojos
+  'Fragancias Ella':    'g-ella',
+  'Fragancias Él':      'g-el',
+  'Satin':              'g-satin',
+  'Corporales':         'g-corpo',
+  'TimeWise Set':       'g-set-tw',
+  'TimeWise Repair Set':'g-set-repair',
+  'Skin Care Set':      'g-set-skin',
+  'Clear Proof Set':    'g-set-cp',
+  'MKMen Set':          'g-set-men',
+  'Satin Set':          'g-set-satin',
+}
+
+// ─── Sub-sección → id de elemento en HTML ───────────────
+const SUB_EL = {
+  clinical:'sub-clinical', timewise:'sub-timewise', repair:'sub-repair',
+  basica:'sub-basica', clearproof:'sub-clearproof', mkmen:'sub-mkmen',
+  especial:'sub-especial',
+  rostro:'sub-rostro', ojos:'sub-ojos', labios:'sub-labios',
+  ella:'sub-ella', el:'sub-el',
+  satin:'sub-satin', corpo:'sub-corpo',
+  'set-tw':'sub-set-tw', 'set-repair':'sub-set-repair',
+  'set-skin':'sub-set-skin', 'set-cp':'sub-set-cp',
+  'set-men':'sub-set-men', 'set-satin':'sub-set-satin',
+}
+
+// ════════════════════════════════════════════════════════
+// 1. INICIALIZAR NAV — dropdown con position:fixed
+// ════════════════════════════════════════════════════════
+function initNav() {
+  const nav = document.getElementById('cat-nav')
+  if (!nav) return
+
+  let ddAbierto = null
+
+  function cerrarTodos() {
+    nav.querySelectorAll('.nav-item-dd.open').forEach(el => el.classList.remove('open'))
+    ddAbierto = null
+  }
+
+  function abrirDD(item, dropdown) {
+    cerrarTodos()
+    // Calcular posición fixed
+    const rect = item.querySelector('.nav-btn').getBoundingClientRect()
+    const header = document.getElementById('site-header')
+    const bottom = header ? header.getBoundingClientRect().bottom : rect.bottom
+    dropdown.style.top  = bottom + 'px'
+    dropdown.style.left = rect.left + 'px'
+    item.classList.add('open')
+    ddAbierto = item
+  }
+
+  // Botones del nav
+  nav.querySelectorAll('.nav-item-dd').forEach(item => {
+    const btn = item.querySelector('.nav-btn')
+    const dd  = item.querySelector('.dropdown')
+    if (!btn || !dd) return
+
+    btn.addEventListener('click', e => {
+      e.stopPropagation()
+      if (item.classList.contains('open')) {
+        cerrarTodos()
+      } else {
+        abrirDD(item, dd)
+      }
+    })
+
+    // Items del dropdown
+    dd.querySelectorAll('.dd-item').forEach(di => {
+      di.addEventListener('click', e => {
+        e.stopPropagation()
+        const page = di.dataset.page
+        const sub  = di.dataset.sub || null
+        cerrarTodos()
+        irA(page, sub)
       })
-
-      btn.classList.add('active-drop')
-      activeDropdown = btn
     })
   })
 
-  // Click outside → close
-  document.addEventListener('click', () => closeNavDropdown())
+  // Botones simples (sin dropdown)
+  nav.querySelectorAll('.nav-btn').forEach(btn => {
+    if (btn.closest('.nav-item-dd')) return  // ya manejados
+    btn.addEventListener('click', () => {
+      cerrarTodos()
+      irA(btn.dataset.page)
+    })
+  })
 
-  // Scroll/resize → reposition (or close)
-  window.addEventListener('scroll', () => closeNavDropdown(), { passive: true })
-  window.addEventListener('resize', () => closeNavDropdown(), { passive: true })
+  // Cerrar al hacer click fuera
+  document.addEventListener('click', cerrarTodos)
+  window.addEventListener('resize', cerrarTodos)
+  window.addEventListener('scroll', cerrarTodos, { passive: true })
 }
 
-function closeNavDropdown() {
-  const panel = document.getElementById('nav-dropdown-panel')
-  if (panel) panel.style.display = 'none'
-  if (activeDropdown) {
-    activeDropdown.classList.remove('active-drop')
-    activeDropdown = null
+// ════════════════════════════════════════════════════════
+// 2. NAVEGACIÓN
+// ════════════════════════════════════════════════════════
+function irA(pagina, sub) {
+  pActual = pagina
+
+  // Ocultar búsqueda si está activa
+  document.getElementById('page-search').style.display = 'none'
+  document.getElementById('search-input').value = ''
+
+  // Cambiar página
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  const pg = document.getElementById('page-' + pagina)
+  if (pg) pg.classList.add('active')
+
+  // Nav activo
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === pagina)
+  })
+
+  // Renderizar
+  renderPagina(pagina)
+
+  // Scroll
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+
+  // Si hay sub-sección, hacer scroll a ella
+  if (sub && SUB_EL[sub]) {
+    setTimeout(() => {
+      const el = document.getElementById(SUB_EL[sub])
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 120)
   }
 }
 
-
-
-
-// ═══════════════════════════════════════════════════════
-// MARY KAY HONDURAS — Tienda v5
-// Cambios: dropdown nav, banners dinámicos, variantes,
-// pago con tarjeta, sin plazos, subcategorías
-// ═══════════════════════════════════════════════════════
-
-const SUPABASE_URL = 'https://knoxphxvmjvkdioeopbi.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtub3hwaHh2bWp2a2Rpb2VvcGJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MzUxNjEsImV4cCI6MjA5MTQxMTE2MX0.4XSZGDibY6z0wdA0UysExc1Yt-yMmckfNs7nxU3fZUo'
-const WA_NUMBER = '50498589303'
-
-const { createClient } = supabase
-const db = createClient(SUPABASE_URL, SUPABASE_KEY)
-const fmt = n => `L ${Number(n||0).toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2})}`
-const esc = s => String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-
-// ── Estado global ──────────────────────────────────────
-let todosProductos = []
-let banners        = []
-let variantesMap   = {}   // { productoId: [variante,...] }
-let carrito        = []
-let paginaActiva   = 'novedades'
-let productoModal  = null
-let qtyModal       = 1
-let varianteSeleccionada = null
-let usuarioActual  = null
-let clienteActual  = null
-
-// ── Definición de sub-secciones por categoría ──────────
-const SUBSECCIONES = {
-  skincare: [
-    { id:'clinical',   label:'Clinical Solutions', icon:'🔬', clase:'sb-clinical' },
-    { id:'timewise',   label:'TimeWise®',           icon:'⏱️', clase:'sb-timewise' },
-    { id:'repair',     label:'TimeWise Repair®',    icon:'✨', clase:'sb-repair'   },
-    { id:'basica',     label:'Skincare Básica',      icon:'🧴', clase:'sb-basica'   },
-    { id:'clearproof', label:'Clear Proof® — Acné', icon:'💧', clase:'sb-clearproof'},
-    { id:'mkmen',      label:'MKMen® — Para Él',    icon:'🧔', clase:'sb-mkmen'    },
-    { id:'especial',   label:'Soluciones Especiales',icon:'💎', clase:'sb-especial' },
-  ],
-  maquillaje: [
-    { id:'rostro', label:'Rostro',    icon:'🎨', clase:'sb-rostro' },
-    { id:'ojos',   label:'Ojos',      icon:'👁️', clase:'sb-ojos'  },
-    { id:'labios', label:'Labios',    icon:'💋', clase:'sb-labios' },
-  ],
-  fragancias: [
-    { id:'fragella', label:'Para Ella', icon:'🌸', clase:'sb-fragella' },
-    { id:'fragel',   label:'Para Él',   icon:'🧔', clase:'sb-fragel'   },
-  ],
-  cuidado: [
-    { id:'satin', label:'Satin Body / Hands / Lips', icon:'🛁', clase:'sb-satin' },
-    { id:'corpo', label:'Geles y Lociones',           icon:'🚿', clase:'sb-corpo' },
-  ],
-  sets: [
-    { id:'set-timewise',   label:'TimeWise®',           icon:'⏱️', clase:'sb-set-timewise'   },
-    { id:'set-repair',     label:'TimeWise Repair®',    icon:'✨', clase:'sb-set-repair'     },
-    { id:'set-skincare',   label:'Skin Care Básico',    icon:'🧴', clase:'sb-set-skincare'   },
-    { id:'set-clearproof', label:'Clear Proof®',        icon:'💧', clase:'sb-set-clearproof' },
-    { id:'set-mkmen',      label:'MKMen®',              icon:'🧔', clase:'sb-set-mkmen'      },
-    { id:'set-satin',      label:'Satin & Especiales',  icon:'🎁', clase:'sb-set-satin'      },
-  ],
-}
-
-// Mapa de subcategoria DB → id de subsección
-const SUBCAT_MAP = {
-  'Clinical Solutions':'clinical','TimeWise':'timewise','TimeWise Repair':'repair',
-  'Skincare Básica':'basica','Clear Proof':'clearproof','MKMen':'mkmen',
-  'Soluciones Especiales':'especial',
-  'Rostro':'rostro','Ojos':'ojos','Labios':'labios','Chromafusion':'ojos',
-  'Fragancias Ella':'fragella','Fragancias Él':'fragel',
-  'Satin':'satin','Corporales':'corpo',
-  'TimeWise Set':'set-timewise','TimeWise Repair Set':'set-repair',
-  'Skin Care Set':'set-skincare','Clear Proof Set':'set-clearproof',
-  'MKMen Set':'set-mkmen','Satin Set':'set-satin',
-}
-
 // ════════════════════════════════════════════════════════
-// CARGA DE DATOS
+// 3. CARGAR DATOS
 // ════════════════════════════════════════════════════════
-async function cargarTodo() {
+async function cargarDatos() {
+  // Mostrar loading en novedades
+  const gn = document.getElementById('grid-novedades')
+  if (gn) gn.innerHTML = '<div class="grid-loading"><div class="loader"></div>Cargando productos...</div>'
+
   const [{ data: prods }, { data: bans }, { data: varis }] = await Promise.all([
     db.from('v_productos').select('*').order('nombre'),
     db.from('banners').select('*').eq('activo', true).order('orden'),
     db.from('producto_variantes').select('*').eq('activo', true).order('orden'),
   ])
 
-  todosProductos = prods || []
-  banners        = bans  || []
+  productos = prods || []
+  banners   = bans  || []
 
-  // Agrupar variantes por producto
-  variantesMap = {}
+  variantes = {}
   ;(varis || []).forEach(v => {
-    if (!variantesMap[v.producto_id]) variantesMap[v.producto_id] = []
-    variantesMap[v.producto_id].push(v)
+    if (!variantes[v.producto_id]) variantes[v.producto_id] = []
+    variantes[v.producto_id].push(v)
   })
 
-  renderPagina(paginaActiva)
+  renderPagina(pActual)
 
-  // Tiempo real
-  db.channel('tienda-realtime')
-    .on('postgres_changes',{event:'*',schema:'public',table:'productos'},  cargarTodo)
-    .on('postgres_changes',{event:'*',schema:'public',table:'banners'},     cargarTodo)
-    .on('postgres_changes',{event:'*',schema:'public',table:'producto_variantes'}, cargarTodo)
-    .on('postgres_changes',{event:'*',schema:'public',table:'pedido_items'},cargarTodo)
+  // Suscripción tiempo real
+  db.channel('tienda-live')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'productos' },   cargarDatos)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'banners' },     cargarDatos)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'producto_variantes' }, cargarDatos)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'pedido_items' }, cargarDatos)
     .subscribe()
 }
 
 // ════════════════════════════════════════════════════════
-// 1. NAVEGACIÓN — cambiar página
-// ════════════════════════════════════════════════════════
-function cambiarPagina(pagina, subseccion) {
-  if (busquedaActiva) limpiarBusqueda()
-
-  document.querySelectorAll('.cat-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === pagina))
-  if (window._updateNavActive) window._updateNavActive(pagina)
-  document.querySelectorAll('.cat-page').forEach(p => p.classList.remove('active'))
-  const pg = document.getElementById('page-' + pagina)
-  if (pg) pg.classList.add('active')
-  paginaActiva = pagina
-
-  renderPagina(pagina)
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-
-  // Scroll a subsección si se indicó
-  if (subseccion) {
-    setTimeout(() => {
-      const el = document.getElementById('sub-' + subseccion)
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 150)
-  }
-}
-
-// ════════════════════════════════════════════════════════
-// 2. RENDER DE CADA PÁGINA
+// 4. RENDERIZAR PÁGINAS
 // ════════════════════════════════════════════════════════
 function renderPagina(pagina) {
-  if (!todosProductos.length && pagina !== 'novedades') return
-
   switch(pagina) {
     case 'novedades':
-      renderBannersNovedades()
-      renderGrid('grid-novedades', todosProductos.filter(p => p.es_novedad))
+      renderBanners()
+      renderGrid('grid-novedades', productos.filter(p => p.es_novedad))
       break
+
     case 'skincare':
-      renderSubsecciones('skincare', p => p.categoria === 'Skincare' || (p.categoria === 'Cuidado Personal' && ['mkmen','especial'].includes(SUBCAT_MAP[p.subcategoria])))
+      renderPorSubcat(['Clinical Solutions'], 'g-clinical')
+      renderPorSubcat(['TimeWise'], 'g-timewise')
+      renderPorSubcat(['TimeWise Repair'], 'g-repair')
+      renderPorSubcat(['Skincare Básica'], 'g-basica')
+      renderPorSubcat(['Clear Proof'], 'g-clearproof')
+      renderPorSubcat(['MKMen'], 'g-mkmen')
+      renderPorSubcat(['Soluciones Especiales'], 'g-especial')
       break
+
     case 'maquillaje':
-      renderSubsecciones('maquillaje', p => p.categoria === 'Maquillaje')
+      renderPorSubcat(['Rostro'], 'g-rostro')
+      renderPorSubcat(['Ojos', 'Chromafusion'], 'g-ojos')
+      renderPorSubcat(['Labios'], 'g-labios')
       break
+
     case 'fragancias':
-      renderSubsecciones('fragancias', p => p.categoria === 'Fragancias')
+      renderPorSubcat(['Fragancias Ella'], 'g-ella')
+      renderPorSubcat(['Fragancias Él'], 'g-el')
       break
+
     case 'cuidado':
-      renderSubsecciones('cuidado', p => p.categoria === 'Cuidado Personal' && !['mkmen','especial'].includes(SUBCAT_MAP[p.subcategoria]))
+      renderPorSubcat(['Satin'], 'g-satin')
+      renderPorSubcat(['Corporales'], 'g-corpo')
       break
+
     case 'herramientas':
-      renderGrid('grid-herramientas', todosProductos.filter(p => p.categoria === 'Herramientas'))
+      renderGrid('g-herramientas', productos.filter(p => p.categoria === 'Herramientas'))
       break
+
     case 'sets':
-      renderSubsecciones('sets', p => p.categoria === 'Sets y Regalos')
+      renderPorSubcat(['TimeWise Set'], 'g-set-tw')
+      renderPorSubcat(['TimeWise Repair Set'], 'g-set-repair')
+      renderPorSubcat(['Skin Care Set'], 'g-set-skin')
+      renderPorSubcat(['Clear Proof Set'], 'g-set-cp')
+      renderPorSubcat(['MKMen Set'], 'g-set-men')
+      renderPorSubcat(['Satin Set'], 'g-set-satin')
       break
   }
 }
 
-// Renderiza sub-secciones dinámicamente dentro de una página
-function renderSubsecciones(pagina, filtroGlobal) {
-  const subs = SUBSECCIONES[pagina] || []
-  subs.forEach(sub => {
-    const gridId = 'grid-' + pagina + '-' + sub.id
-    const prods  = todosProductos.filter(p => filtroGlobal(p) && SUBCAT_MAP[p.subcategoria] === sub.id)
-    renderGrid(gridId, prods)
-  })
+function renderPorSubcat(subcats, gridId) {
+  const lista = productos.filter(p => subcats.includes(p.subcategoria))
+  renderGrid(gridId, lista)
 }
 
-// Banners dinámicos desde Supabase
-function renderBannersNovedades() {
-  const wrap = document.getElementById('banners-novedades')
-  if (!wrap) return
-  const bansNov = banners.filter(b => b.pagina === 'novedades')
-  // Si no hay banners en DB, mostrar banners estáticos por defecto
-  if (!bansNov.length) {
-    wrap.innerHTML = `
-      <div class="promo-card promo-mask"><div class="pc-text"><span class="pc-tag">¡NUEVO!</span><h3>Hydrating Cream Mask</h3><p>Tu aliada para hidratar sin enjuagar. 12 horas de hidratación.</p></div><span class="pc-emoji">🫧</span></div>
-      <div class="promo-card promo-gloss"><div class="pc-text"><span class="pc-tag">Edición Limitada</span><h3>Lip Gloss Primavera</h3><p>Lilac Love, Cherry Red y Rose Noir. Hidrata y brilla.</p></div><span class="pc-emoji">💋</span></div>
-      <div class="promo-card promo-bronzer"><div class="pc-text"><span class="pc-tag">Edición Limitada</span><h3>Illuminating Bronzer</h3><p>Medium Glow y Deep Glow para cada tono de piel.</p></div><span class="pc-emoji">☀️</span></div>
-      <div class="promo-card promo-aftersun"><div class="pc-text"><span class="pc-tag">Edición Especial</span><h3>After-Sun Gel</h3><p>¡De vuelta por demanda popular! Calma tu piel post-sol.</p></div><span class="pc-emoji">🌊</span></div>`
-    return
-  }
-  wrap.style.display = ''
-  wrap.innerHTML = bansNov.map(b => `
-    <div class="promo-card ${b.estilo || 'promo-mask'}">
-      <div class="pc-text">
-        <span class="pc-tag">${esc(b.etiqueta)}</span>
-        <h3>${esc(b.titulo)}</h3>
-        <p>${esc(b.descripcion || '')}</p>
-      </div>
-      <span class="pc-emoji">${b.emoji || '🌸'}</span>
-    </div>`).join('')
-}
-
-// ════════════════════════════════════════════════════════
-// RENDER GRILLA
-// ════════════════════════════════════════════════════════
 function renderGrid(gridId, lista) {
   const grid = document.getElementById(gridId)
   if (!grid) return
-  if (!lista.length) { grid.innerHTML = ''; return }
+
+  if (!lista || !lista.length) {
+    grid.innerHTML = '<div class="grid-empty">Sin productos disponibles en este momento.</div>'
+    return
+  }
 
   grid.innerHTML = lista.map(p => {
-    const agotado  = p.alerta === 'AGOTADO'
-    const bajo     = p.alerta === 'BAJO'
-    const enCarrito = carrito.find(i => i.id === p.id)
-    const img = p.imagen_url
-      ? `<img src="${p.imagen_url}" alt="${esc(p.nombre)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=pc-placeholder>💄</div>'">`
-      : `<div class="pc-placeholder">💄</div>`
+    const agotado = p.alerta === 'AGOTADO'
+    const bajo    = p.alerta === 'BAJO'
+    const nuevo   = p.es_novedad
+
+    const imgHtml = p.imagen_url
+      ? `<img src="${esc(p.imagen_url)}" alt="${esc(p.nombre)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : ''
+
+    const badge = agotado ? '<span class="pcard-badge badge-agotado">Agotado</span>'
+                : bajo    ? '<span class="pcard-badge badge-bajo">Últimas</span>'
+                : nuevo   ? '<span class="pcard-badge badge-nuevo">¡Nuevo!</span>'
+                : ''
 
     return `
-    <div class="product-card ${agotado?'agotado':''}" onclick="abrirModalProducto('${p.id}')">
-      <div class="pc-img-wrap">
-        ${img}
-        ${agotado?'<span class="pc-overlay-badge agotado">Agotado</span>':bajo?'<span class="pc-overlay-badge bajo">Últimas</span>':p.es_novedad?'<span class="pc-overlay-badge nuevo">¡Nuevo!</span>':''}
-        <div class="pc-quick-add">${agotado?'Agotado':enCarrito?'✓ En carrito':'🛍️ Ver y agregar'}</div>
+    <div class="pcard ${agotado ? 'agotado' : ''}" onclick="abrirModal('${p.id}')">
+      <div class="pcard-img">
+        ${imgHtml}
+        <div class="pcard-ph" style="${p.imagen_url ? 'display:none' : ''}">💄</div>
+        ${badge}
+        <div class="pcard-hover">${agotado ? 'Agotado' : '🛍️ Ver producto'}</div>
       </div>
-      <div class="pc-body">
-        <div class="pc-cat">${p.subcategoria || p.categoria}</div>
-        <div class="pc-name">${esc(p.nombre)}</div>
-        <div class="pc-price-row">
-          <span class="pc-price">${fmt(p.precio_venta)}</span>
-          <span class="pc-stock-badge ${p.alerta.toLowerCase()}">${agotado?'Agotado':bajo?'Últimas':'Disponible'}</span>
+      <div class="pcard-body">
+        <div class="pcard-cat">${esc(p.subcategoria || p.categoria)}</div>
+        <div class="pcard-name">${esc(p.nombre)}</div>
+        <div class="pcard-foot">
+          <span class="pcard-price">${L(p.precio_venta)}</span>
+          <span class="pcard-stock stock-${p.alerta.toLowerCase()}">${agotado ? 'Agotado' : bajo ? 'Últimas' : 'Disponible'}</span>
         </div>
       </div>
     </div>`
   }).join('')
 }
 
-// ════════════════════════════════════════════════════════
-// BÚSQUEDA
-// ════════════════════════════════════════════════════════
-let busquedaActiva = false
-document.getElementById('buscar-input')?.addEventListener('input', e => {
-  const q = e.target.value.toLowerCase().trim()
-  if (!q) { limpiarBusqueda(); return }
-  busquedaActiva = true
-  document.querySelectorAll('.cat-page').forEach(p => p.style.display = 'none')
-  let sr = document.getElementById('search-results-page')
-  if (!sr) {
-    sr = document.createElement('div')
-    sr.id = 'search-results-page'
-    document.querySelector('.site-main').prepend(sr)
-  }
-  const found = todosProductos.filter(p =>
-    p.nombre.toLowerCase().includes(q) || (p.categoria||'').toLowerCase().includes(q) || (p.subcategoria||'').toLowerCase().includes(q))
-  sr.style.display = 'block'
-  sr.innerHTML = `<div style="max-width:1200px;margin:0 auto;padding:24px">
-    <p style="font-size:14px;color:#9ca3af;margin-bottom:18px">${found.length} resultado${found.length!==1?'s':''} para "<strong>${q}</strong>"</p>
-    <div class="products-grid" id="grid-search"></div></div>`
-  renderGrid('grid-search', found)
-})
+function renderBanners() {
+  const wrap = document.getElementById('banners-novedades')
+  if (!wrap) return
 
-function limpiarBusqueda() {
-  busquedaActiva = false
-  const sr = document.getElementById('search-results-page')
-  if (sr) sr.style.display = 'none'
-  document.querySelectorAll('.cat-page').forEach(p => p.style.display='')
-  document.getElementById('page-'+paginaActiva)?.classList.add('active')
+  const bansNov = banners.filter(b => b.pagina === 'novedades')
+
+  if (!bansNov.length) {
+    // Banners por defecto si no hay en DB
+    wrap.innerHTML = `
+      <div class="promo-card promo-mask"><div><span class="pc-tag">¡NUEVO!</span><h3>Hydrating Cream Mask</h3><p>Tu aliada para hidratar sin enjuagar. 12 horas de hidratación.</p></div><span class="pc-emoji">🫧</span></div>
+      <div class="promo-card promo-gloss"><div><span class="pc-tag">Ed. Limitada</span><h3>Lip Gloss Primavera</h3><p>Lilac Love, Cherry Red y Rose Noir. Hidrata y brilla.</p></div><span class="pc-emoji">💋</span></div>
+      <div class="promo-card promo-bronzer"><div><span class="pc-tag">Ed. Limitada</span><h3>Illuminating Bronzer</h3><p>Medium Glow y Deep Glow para todo tono de piel.</p></div><span class="pc-emoji">☀️</span></div>
+      <div class="promo-card promo-aftersun"><div><span class="pc-tag">Ed. Especial</span><h3>After-Sun Gel</h3><p>¡De vuelta! Calma tu piel después del sol.</p></div><span class="pc-emoji">🌊</span></div>`
+    return
+  }
+
+  wrap.innerHTML = bansNov.map(b => `
+    <div class="promo-card ${esc(b.estilo || 'promo-mask')}">
+      <div><span class="pc-tag">${esc(b.etiqueta || '')}</span><h3>${esc(b.titulo)}</h3><p>${esc(b.descripcion || '')}</p></div>
+      <span class="pc-emoji">${b.emoji || '🌸'}</span>
+    </div>`).join('')
 }
 
 // ════════════════════════════════════════════════════════
-// 6. MODAL PRODUCTO CON VARIANTES
+// 5. BÚSQUEDA
 // ════════════════════════════════════════════════════════
-function abrirModalProducto(id) {
-  const p = todosProductos.find(x => x.id === id)
+document.getElementById('search-input').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase().trim()
+  if (!q) {
+    document.getElementById('page-search').style.display = 'none'
+    document.querySelectorAll('.page').forEach(p => {
+      p.style.display = p.id === 'page-' + pActual ? 'block' : 'none'
+    })
+    document.getElementById('page-' + pActual).classList.add('active')
+    return
+  }
+  document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.remove('active') })
+  const sp = document.getElementById('page-search')
+  sp.style.display = 'block'
+  const found = productos.filter(p =>
+    p.nombre.toLowerCase().includes(q) ||
+    (p.categoria || '').toLowerCase().includes(q) ||
+    (p.subcategoria || '').toLowerCase().includes(q) ||
+    (p.codigo || '').toLowerCase().includes(q)
+  )
+  document.getElementById('search-title').textContent = `${found.length} resultado${found.length !== 1 ? 's' : ''} para "${e.target.value}"`
+  renderGrid('g-search', found)
+})
+
+// ════════════════════════════════════════════════════════
+// 6. MODAL DE PRODUCTO
+// ════════════════════════════════════════════════════════
+function abrirModal(id) {
+  const p = productos.find(x => x.id === id)
   if (!p) return
-  productoModal = p; qtyModal = 1; varianteSeleccionada = null
+  prodModal = p; qtyModal = 1; varSel = null
 
-  const imgWrap = document.getElementById('pm-img-wrap')
+  // Imagen
+  const imgWrap = document.getElementById('modal-img-wrap')
   imgWrap.innerHTML = p.imagen_url
-    ? `<img src="${p.imagen_url}" alt="${esc(p.nombre)}" onerror="this.parentElement.innerHTML='<div class=pm-img-placeholder>💄</div>'">`
-    : `<div class="pm-img-placeholder">💄</div>`
+    ? `<img src="${esc(p.imagen_url)}" alt="${esc(p.nombre)}" onerror="this.parentElement.innerHTML='<div class=modal-img-ph>💄</div>'">`
+    : '<div class="modal-img-ph">💄</div>'
 
-  document.getElementById('pm-cat').textContent    = p.subcategoria || p.categoria
-  document.getElementById('pm-nombre').textContent = p.nombre
-  document.getElementById('pm-precio').textContent = fmt(p.precio_venta)
-  document.getElementById('pm-qty').textContent    = '1'
+  // Info
+  document.getElementById('modal-cat').textContent    = p.subcategoria || p.categoria
+  document.getElementById('modal-nombre').textContent = p.nombre
+  document.getElementById('modal-precio').textContent = L(p.precio_venta)
 
-  const stockEl = document.getElementById('pm-stock')
-  stockEl.textContent = p.alerta==='AGOTADO'?'Sin stock disponible':p.alerta==='BAJO'?`¡Solo quedan ${p.stock_actual} unidades!`:`Disponible · ${p.stock_actual} en stock`
-  stockEl.style.color = p.alerta==='AGOTADO'?'var(--red)':p.alerta==='BAJO'?'var(--amber)':'var(--green)'
+  const stockEl = document.getElementById('modal-stock')
+  stockEl.textContent = p.alerta === 'AGOTADO' ? 'Sin stock' : p.alerta === 'BAJO' ? `¡Solo ${p.stock_actual} disponibles!` : `En stock (${p.stock_actual} unidades)`
+  stockEl.style.color = p.alerta === 'AGOTADO' ? 'var(--red)' : p.alerta === 'BAJO' ? 'var(--amb)' : 'var(--grn)'
 
-  // Variantes — agrupar por nombre_variante (puede haber varios grupos)
-  const varis = variantesMap[id] || []
-  const varSection = document.getElementById('pm-variantes')
+  // Variantes
+  const varis = variantes[id] || []
+  const vWrap = document.getElementById('modal-variantes')
   if (varis.length) {
-    // Agrupar por nombre_variante
-    const grupos = {}
-    varis.forEach(v => {
-      const grp = v.nombre_variante || 'Opción'
-      if (!grupos[grp]) grupos[grp] = []
-      grupos[grp].push(v)
-    })
-    varSection.innerHTML = Object.entries(grupos).map(([nombre, opciones]) => `
-      <div class="pm-variante-grupo">
-        <label>${esc(nombre)}</label>
-        <div class="variantes-grid">
-          ${opciones.map(v => `<button class="variante-btn" data-grp="${esc(nombre)}" data-vid="${v.id}" data-valor="${esc(v.valor)}" data-precio="${v.precio_extra||0}">${esc(v.valor)}</button>`).join('')}
-        </div>
-      </div>`).join('')
-    // Attach click handlers
-    varSection.querySelectorAll('.variante-btn').forEach(btn => {
-      btn.addEventListener('click', () => seleccionarVariante(btn))
-    })
-    varSection.style.display = 'block'
+    const nombre = varis[0].nombre_variante || 'Opción'
+    vWrap.innerHTML = `
+      <span class="var-label">${esc(nombre)}</span>
+      <div class="var-btns">
+        ${varis.map(v => `<button class="var-btn" onclick="selVar('${v.id}',this,${v.precio_extra||0})">${esc(v.valor)}</button>`).join('')}
+      </div>`
+    vWrap.style.display = 'block'
   } else {
-    varSection.innerHTML = ''
-    varSection.style.display = 'none'
+    vWrap.innerHTML = ''
+    vWrap.style.display = 'none'
   }
 
-  document.getElementById('pm-badge-row').innerHTML = `
-    <span style="font-size:11px;background:var(--mk-xlight);color:var(--mk-dark);padding:4px 10px;border-radius:99px;font-weight:700">${esc(p.subcategoria||p.categoria)}</span>
-    ${p.es_novedad?'<span style="font-size:11px;background:var(--mk);color:#fff;padding:4px 10px;border-radius:99px;font-weight:700">¡Nuevo!</span>':''}
-    ${p.alerta==='BAJO'?'<span style="font-size:11px;background:#fffbeb;color:var(--amber);padding:4px 10px;border-radius:99px;font-weight:700">Pocas unidades</span>':''}`
+  document.getElementById('qty-val').textContent = '1'
+  const btn = document.getElementById('btn-add-cart')
+  btn.disabled    = p.alerta === 'AGOTADO'
+  btn.textContent = p.alerta === 'AGOTADO' ? '🚫 Agotado' : '🛍️ Agregar al carrito'
 
-  const addBtn = document.getElementById('pm-add-btn')
-  addBtn.disabled    = p.alerta === 'AGOTADO'
-  addBtn.textContent = p.alerta === 'AGOTADO' ? '🚫 Agotado' : '🛍️ Agregar al carrito'
-
-  document.getElementById('pm-meta').innerHTML = `
-    <span class="pm-meta-item">Código: ${p.codigo}</span>
-    <span class="pm-meta-item">Producto Mary Kay original</span>
-    <span class="pm-meta-item">Envío a todo Honduras</span>`
-
-  document.getElementById('modal-producto').classList.add('open')
+  document.getElementById('modal-prod').classList.add('open')
   document.body.style.overflow = 'hidden'
 }
 
-function seleccionarVariante(btn) {
-  const grp = btn.dataset.grp
-  // Deselect only buttons in the same group
-  document.querySelectorAll(`.variante-btn[data-grp="${grp}"]`).forEach(b => b.classList.remove('selected'))
-  btn.classList.add('selected')
-
-  // Build variante seleccionada from all selected buttons across all groups
-  const seleccionadas = [...document.querySelectorAll('.variante-btn.selected')]
-  const textos = seleccionadas.map(b => `${b.dataset.grp}: ${b.dataset.valor}`)
-  const precioExtra = seleccionadas.reduce((s, b) => s + Number(b.dataset.precio || 0), 0)
-
-  varianteSeleccionada = {
-    id:              btn.dataset.vid,
-    nombre_variante: grp,
-    valor:           btn.dataset.valor,
-    precio_extra:    precioExtra,
-    texto:           textos.join(' · ')
-  }
-
-  // Recalcular precio
-  if (productoModal) {
-    const total = Number(productoModal.precio_venta) + precioExtra
-    document.getElementById('pm-precio').textContent = fmt(total)
-  }
+function selVar(vid, btn, precioExtra) {
+  document.querySelectorAll('.var-btn').forEach(b => b.classList.remove('sel'))
+  btn.classList.add('sel')
+  const v = (variantes[prodModal?.id] || []).find(x => x.id === vid)
+  varSel = v
+  const total = Number(prodModal.precio_venta) + Number(precioExtra || 0)
+  document.getElementById('modal-precio').textContent = L(total)
 }
 
-function cerrarModalProducto() {
-  document.getElementById('modal-producto').classList.remove('open')
+function cambiarQty(delta) {
+  if (!prodModal) return
+  qtyModal = Math.max(1, Math.min(qtyModal + delta, prodModal.stock_actual || 99))
+  document.getElementById('qty-val').textContent = qtyModal
+}
+
+function cerrarModal() {
+  document.getElementById('modal-prod').classList.remove('open')
   document.body.style.overflow = ''
-  productoModal = null; varianteSeleccionada = null
+  prodModal = null; varSel = null
 }
 
-function cambiarQtyModal(delta) {
-  if (!productoModal) return
-  qtyModal = Math.max(1, Math.min(qtyModal + delta, productoModal.stock_actual || 99))
-  document.getElementById('pm-qty').textContent = qtyModal
-}
-
-function agregarDesdeModal() {
-  if (!productoModal || productoModal.alerta === 'AGOTADO') return
-  const varis = variantesMap[productoModal.id] || []
-  // Verificar que todos los grupos tengan selección
-  if (varis.length) {
-    const grupos = [...new Set(varis.map(v => v.nombre_variante || 'Opción'))]
-    const seleccionadas = document.querySelectorAll('#pm-variantes .variante-btn.selected')
-    const gruposSeleccionados = new Set([...seleccionadas].map(b => b.dataset.grp))
-    const faltantes = grupos.filter(g => !gruposSeleccionados.has(g))
-    if (faltantes.length) {
-      alert(`Por favor elige: ${faltantes.join(', ')}`)
-      return
-    }
+function agregarAlCarrito() {
+  if (!prodModal || prodModal.alerta === 'AGOTADO') return
+  const varis = variantes[prodModal.id] || []
+  if (varis.length && !varSel) {
+    alert(`Por favor elige un ${varis[0].nombre_variante || 'Tono'} antes de agregar.`)
+    return
   }
-  const precioFinal = Number(productoModal.precio_venta) + Number(varianteSeleccionada?.precio_extra || 0)
-  const varTexto    = varianteSeleccionada?.texto || null
-  const key         = productoModal.id + (varTexto ? '-' + varTexto.replace(/[^a-z0-9]/gi,'') : '')
-
-  const ex = carrito.find(x => x.key === key)
+  const precio  = Number(prodModal.precio_venta) + Number(varSel?.precio_extra || 0)
+  const varTxt  = varSel ? `${varSel.nombre_variante}: ${varSel.valor}` : null
+  const key     = prodModal.id + (varSel ? '-' + varSel.id : '')
+  const ex      = carrito.find(x => x.key === key)
   for (let i = 0; i < qtyModal; i++) {
-    if (ex) ex.cantidad++
-    else carrito.push({ key, id: productoModal.id, nombre: productoModal.nombre, precio: precioFinal, imagen: productoModal.imagen_url||'', cantidad: 1, variante: varTexto, variante_id: varianteSeleccionada?.id||null })
+    if (ex) ex.qty++
+    else carrito.push({ key, id: prodModal.id, nombre: prodModal.nombre, precio, img: prodModal.imagen_url || '', qty: 1, varTxt, varId: varSel?.id || null })
   }
-  actualizarCarritoUI()
-  cerrarModalProducto()
+  actualizarCarrito()
+  cerrarModal()
   abrirCarrito()
-  renderPagina(paginaActiva)
 }
 
 // ════════════════════════════════════════════════════════
-// CARRITO
+// 7. CARRITO
 // ════════════════════════════════════════════════════════
-function cambiarCantidad(key, delta) {
-  const item = carrito.find(x => x.key === key)
-  if (!item) return
-  item.cantidad = Math.max(0, item.cantidad + delta)
-  if (item.cantidad === 0) carrito = carrito.filter(x => x.key !== key)
-  actualizarCarritoUI()
-}
-function quitarItem(key) {
-  carrito = carrito.filter(x => x.key !== key)
-  actualizarCarritoUI()
-}
+function actualizarCarrito() {
+  const total = carrito.reduce((s, i) => s + i.qty * i.precio, 0)
+  const uds   = carrito.reduce((s, i) => s + i.qty, 0)
+  const badge = document.getElementById('cart-badge')
+  badge.textContent = uds
+  badge.style.display = uds > 0 ? 'flex' : 'none'
 
-function actualizarCarritoUI() {
-  const total    = carrito.reduce((s,i) => s + i.cantidad * i.precio, 0)
-  const totalUds = carrito.reduce((s,i) => s + i.cantidad, 0)
-  const badge    = document.getElementById('cart-badge')
-  badge.textContent   = totalUds
-  badge.style.display = totalUds > 0 ? 'flex' : 'none'
-
-  const body = document.getElementById('cart-items')
-  if (carrito.length === 0) {
-    body.innerHTML = `<div class="cart-empty-state"><span class="ce-icon">🛍️</span><p>Tu carrito está vacío.<br>Explora nuestros productos.</p></div>`
+  const body = document.getElementById('cart-body')
+  if (!carrito.length) {
+    body.innerHTML = '<div class="cart-empty"><span class="ce-ico">🛍️</span><p>Tu carrito está vacío</p></div>'
     document.getElementById('cart-footer').style.display = 'none'
     return
   }
   body.innerHTML = carrito.map(i => `
     <div class="cart-item">
-      <div class="ci-img">${i.imagen?`<img src="${i.imagen}" alt="" onerror="this.parentElement.innerHTML='💄'">`:'💄'}</div>
+      <div class="ci-img">${i.img ? `<img src="${esc(i.img)}" alt="" onerror="this.style.display='none'">` : '💄'}</div>
       <div class="ci-info">
         <div class="ci-name">${esc(i.nombre)}</div>
-        ${i.variante?`<div class="ci-variante">${esc(i.variante)}</div>`:''}
-        <div class="ci-price">${fmt(i.precio)} c/u</div>
+        ${i.varTxt ? `<div class="ci-var">${esc(i.varTxt)}</div>` : ''}
+        <div class="ci-price">${L(i.precio)} c/u</div>
         <div class="ci-qty-row">
-          <button class="ci-qty-btn" onclick="cambiarCantidad('${i.key}',-1)">−</button>
-          <span class="ci-qty">${i.cantidad}</span>
-          <button class="ci-qty-btn" onclick="cambiarCantidad('${i.key}',1)">+</button>
+          <button class="ci-qb" onclick="cambiarQtyCarrito('${i.key}',-1)">−</button>
+          <span class="ci-q">${i.qty}</span>
+          <button class="ci-qb" onclick="cambiarQtyCarrito('${i.key}',1)">+</button>
         </div>
       </div>
-      <span class="ci-subtotal">${fmt(i.cantidad*i.precio)}</span>
-      <button class="ci-remove" onclick="quitarItem('${i.key}')">×</button>
+      <span class="ci-sub">${L(i.qty * i.precio)}</span>
+      <button class="ci-rm" onclick="quitarItem('${i.key}')">×</button>
     </div>`).join('')
 
-  document.getElementById('cart-total').textContent = fmt(total)
-  document.getElementById('cart-units').textContent = `${totalUds} unidad${totalUds!==1?'es':''} en total`
+  document.getElementById('cart-total').textContent = L(total)
+  document.getElementById('cart-uds').textContent   = `${uds} unidad${uds !== 1 ? 'es' : ''} en total`
   document.getElementById('cart-footer').style.display = 'block'
 }
 
-function abrirCarrito()  { document.getElementById('cart-overlay').classList.add('open');document.body.style.overflow='hidden' }
-function cerrarCarrito() { document.getElementById('cart-overlay').classList.remove('open');document.body.style.overflow='' }
+function cambiarQtyCarrito(key, delta) {
+  const item = carrito.find(x => x.key === key)
+  if (!item) return
+  item.qty = Math.max(0, item.qty + delta)
+  if (item.qty === 0) carrito = carrito.filter(x => x.key !== key)
+  actualizarCarrito()
+}
+function quitarItem(key) {
+  carrito = carrito.filter(x => x.key !== key)
+  actualizarCarrito()
+}
+function abrirCarrito() {
+  document.getElementById('cart-overlay').classList.add('open')
+  document.body.style.overflow = 'hidden'
+}
+function cerrarCarrito() {
+  document.getElementById('cart-overlay').classList.remove('open')
+  document.body.style.overflow = ''
+}
 
 // ════════════════════════════════════════════════════════
-// 4. CHECKOUT — con pago con tarjeta
-// 7. Sin pago a plazos
+// 8. CHECKOUT
 // ════════════════════════════════════════════════════════
 function abrirCheckout() {
   if (!carrito.length) return
   cerrarCarrito()
-  const total = carrito.reduce((s,i) => s + i.cantidad*i.precio, 0)
-  document.getElementById('cs-items').innerHTML = carrito.map(i =>
-    `<div class="csb-item"><span>${esc(i.nombre)}${i.variante?' ('+esc(i.variante)+')':''} × ${i.cantidad}</span><strong>${fmt(i.cantidad*i.precio)}</strong></div>`
-  ).join('')
-  document.getElementById('cs-total').textContent = fmt(total)
-  if (clienteActual) {
-    const el = id => document.getElementById(id)
-    el('co-nombre') && (el('co-nombre').value = clienteActual.nombre||'')
-    el('co-tel')    && (el('co-tel').value    = clienteActual.telefono||'')
-    el('co-ciudad') && (el('co-ciudad').value = clienteActual.ciudad||'')
+  const total = carrito.reduce((s, i) => s + i.qty * i.precio, 0)
+
+  const resumen = document.getElementById('checkout-resumen')
+  resumen.innerHTML = `
+    <div class="cs-title">Resumen del pedido</div>
+    ${carrito.map(i => `<div class="cs-item"><span>${esc(i.nombre)}${i.varTxt ? ` (${i.varTxt})` : ''} × ${i.qty}</span><strong>${L(i.qty * i.precio)}</strong></div>`).join('')}
+    <div class="cs-total"><span>Total</span><strong>${L(total)}</strong></div>`
+
+  if (clienteAct) {
+    const f = id => document.getElementById(id)
+    if (f('co-nombre')) f('co-nombre').value = clienteAct.nombre || ''
+    if (f('co-tel'))    f('co-tel').value    = clienteAct.telefono || ''
+    if (f('co-ciudad')) f('co-ciudad').value = clienteAct.ciudad || ''
   }
+
   document.getElementById('checkout-overlay').classList.add('open')
   document.body.style.overflow = 'hidden'
 }
@@ -516,57 +521,51 @@ function cerrarCheckout() {
   document.body.style.overflow = ''
 }
 
-// Mostrar/ocultar panel de tarjeta según método de pago
-document.getElementById('co-pago')?.addEventListener('change', function() {
-  const panel = document.getElementById('card-payment-panel')
-  if (!panel) return
-  panel.classList.toggle('visible', this.value === 'Tarjeta')
-  // Actualizar texto del botón
-  const btn = document.getElementById('btn-place-order')
-  if (btn) btn.textContent = this.value === 'Tarjeta' ? '💳 Pagar y confirmar' : '✅ Confirmar pedido'
-})
+function toggleCardPanel(pago) {
+  document.getElementById('card-panel').style.display = pago === 'Tarjeta' ? 'block' : 'none'
+  document.getElementById('btn-place').textContent = pago === 'Tarjeta' ? '💳 Pagar y confirmar' : '✅ Confirmar pedido'
+}
 
-document.getElementById('btn-place-order')?.addEventListener('click', async () => {
-  const g  = id => document.getElementById(id)?.value?.trim()
+async function hacerPedido() {
+  const g = id => document.getElementById(id)?.value?.trim()
   const nombre = g('co-nombre'); const tel = g('co-tel')
-  const ciudad = g('co-ciudad'); const pago = g('co-pago')
+  const ciudad = g('co-ciudad'); const pago  = g('co-pago')
   const notas  = g('co-notas'); const registrar = document.getElementById('co-registrar')?.checked
 
   if (!nombre || !tel) { alert('Por favor completa tu nombre y WhatsApp.'); return }
 
-  // Validar tarjeta si es el método seleccionado
   if (pago === 'Tarjeta') {
-    const cardNum = g('card-number'); const cardExp = g('card-exp'); const cardCvv = g('card-cvv')
-    if (!cardNum || !cardExp || !cardCvv) { alert('Por favor completa todos los datos de la tarjeta.'); return }
-    // En producción real: aquí iría la llamada a Stripe/PayPal
-    // Por ahora simulamos aprobación
+    if (!g('card-num') || !g('card-exp') || !g('card-cvv')) {
+      alert('Completa los datos de la tarjeta.')
+      return
+    }
   }
 
-  const btn = document.getElementById('btn-place-order')
+  const btn = document.getElementById('btn-place')
   btn.disabled = true; btn.textContent = 'Procesando...'
 
   try {
     let clienteId = null
-    if (usuarioActual && clienteActual) {
-      clienteId = clienteActual.id
-      await db.from('clientes').update({ nombre, telefono: tel, ciudad: ciudad||null }).eq('id', clienteId)
+
+    if (userActual && clienteAct) {
+      clienteId = clienteAct.id
+      await db.from('clientes').update({ nombre, telefono: tel, ciudad: ciudad || null }).eq('id', clienteId)
     } else {
       const { data: cli } = await db.from('clientes').select('id').eq('telefono', tel).maybeSingle()
       if (cli) {
         clienteId = cli.id
-        await db.from('clientes').update({ nombre, ciudad: ciudad||null }).eq('id', clienteId)
+        await db.from('clientes').update({ nombre, ciudad: ciudad || null }).eq('id', clienteId)
       } else {
-        const { data: nvo } = await db.from('clientes').insert({ nombre, telefono: tel, ciudad: ciudad||null, etiqueta: 'Nueva' }).select('id').single()
+        const { data: nvo } = await db.from('clientes').insert({ nombre, telefono: tel, ciudad: ciudad || null, etiqueta: 'Nueva' }).select('id').single()
         clienteId = nvo?.id
       }
-      // Registro opcional
       if (registrar) {
         const email = document.getElementById('co-email')?.value?.trim()
         const pass  = document.getElementById('co-pass')?.value
         const pass2 = document.getElementById('co-pass2')?.value
         if (email && pass && pass === pass2 && pass.length >= 6) {
-          const { data: authData } = await db.auth.signUp({ email, password: pass, options:{ data:{ nombre } } })
-          if (authData?.user && clienteId) await db.from('clientes').update({ auth_user_id: authData.user.id, email }).eq('id', clienteId)
+          const { data: au } = await db.auth.signUp({ email, password: pass, options: { data: { nombre } } })
+          if (au?.user && clienteId) await db.from('clientes').update({ auth_user_id: au.user.id, email }).eq('id', clienteId)
         }
       }
     }
@@ -574,244 +573,144 @@ document.getElementById('btn-place-order')?.addEventListener('click', async () =
     const { data: num } = await db.rpc('generar_numero_pedido')
     const { data: ped } = await db.from('pedidos').insert({
       numero: num, cliente_id: clienteId, canal: 'Tienda online',
-      metodo_pago: pago, notas: notas||null, estado: pago==='Tarjeta'?'Pagado':'Pendiente',
+      metodo_pago: pago, notas: notas || null,
+      estado: pago === 'Tarjeta' ? 'Pagado' : 'Pendiente',
       fecha: new Date().toISOString().split('T')[0]
     }).select('id').single()
 
     await db.from('pedido_items').insert(
       carrito.map(i => ({
-        pedido_id: ped.id, producto_id: i.id, cantidad: i.cantidad,
-        precio_unitario: i.precio, variante_id: i.variante_id||null,
-        variante_texto: i.variante||null
+        pedido_id: ped.id, producto_id: i.id,
+        cantidad: i.qty, precio_unitario: i.precio,
+        variante_id: i.varId || null,
+        variante_texto: i.varTxt || null
       }))
     )
 
-    const total = carrito.reduce((s,i) => s+i.cantidad*i.precio, 0)
-    const waMsg = encodeURIComponent(`Hola! 🌸 Acabo de hacer el pedido *${num}* por *${fmt(total)}*. ¿Me pueden confirmar? Gracias!`)
+    const total = carrito.reduce((s, i) => s + i.qty * i.precio, 0)
+    const msg   = encodeURIComponent(`Hola 🌸 Hice el pedido *${num}* por *${L(total)}*. ¿Me confirman? ¡Gracias!`)
 
-    document.getElementById('confirm-num').textContent        = num
-    document.getElementById('confirm-name').textContent       = nombre
-    document.getElementById('confirm-total-text').textContent = fmt(total)
+    document.getElementById('confirm-num').textContent   = num
+    document.getElementById('confirm-name').textContent  = nombre
+    document.getElementById('confirm-total').textContent = L(total)
 
-    // Si es tarjeta, no se necesita confirmar por WA
-    const waBtn = document.getElementById('confirm-wa')
+    const waBtn   = document.getElementById('btn-wa-confirm')
+    const cardOk  = document.getElementById('card-ok')
     if (pago === 'Tarjeta') {
-      waBtn.style.display = 'none'
-      document.getElementById('confirm-pagado').style.display = 'flex'
+      waBtn.style.display  = 'none'
+      cardOk.style.display = 'flex'
     } else {
-      waBtn.style.display = 'flex'
-      waBtn.href = `https://wa.me/${WA_NUMBER}?text=${waMsg}`
-      document.getElementById('confirm-pagado').style.display = 'none'
+      waBtn.href = `https://wa.me/${WA}?text=${msg}`
+      waBtn.style.display  = 'flex'
+      cardOk.style.display = 'none'
     }
 
-    carrito = []; actualizarCarritoUI(); renderPagina(paginaActiva)
+    carrito = []; actualizarCarrito()
     cerrarCheckout()
     document.getElementById('confirm-overlay').style.display = 'flex'
 
   } catch (err) {
-    console.error(err)
+    console.error('Error pedido:', err)
     alert('Error al procesar el pedido. Intenta de nuevo.')
   }
   btn.disabled = false
   btn.textContent = document.getElementById('co-pago')?.value === 'Tarjeta' ? '💳 Pagar y confirmar' : '✅ Confirmar pedido'
-})
+}
 
 // ════════════════════════════════════════════════════════
-// AUTH
+// 9. AUTH
 // ════════════════════════════════════════════════════════
-async function inicializarAuth() {
+async function initAuth() {
   const { data: { session } } = await db.auth.getSession()
-  if (session?.user) await cargarUsuario(session.user)
-  db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN'  && session?.user) await cargarUsuario(session.user)
-    if (event === 'SIGNED_OUT') { usuarioActual = null; clienteActual = null; renderUserArea() }
+  if (session?.user) await loadUser(session.user)
+  db.auth.onAuthStateChange(async (ev, sess) => {
+    if (ev === 'SIGNED_IN'  && sess?.user) await loadUser(sess.user)
+    if (ev === 'SIGNED_OUT') { userActual = null; clienteAct = null; renderUser() }
   })
 }
-async function cargarUsuario(user) {
-  usuarioActual = user
+async function loadUser(user) {
+  userActual = user
   const { data } = await db.from('clientes').select('*').eq('auth_user_id', user.id).maybeSingle()
-  clienteActual = data
-  renderUserArea()
+  clienteAct = data
+  renderUser()
 }
-function renderUserArea() {
+function renderUser() {
   const area = document.getElementById('user-area')
   if (!area) return
-  if (usuarioActual) {
-    const nombre = clienteActual?.nombre || usuarioActual.email.split('@')[0]
-    area.innerHTML = `<div class="user-chip"><span class="user-avatar">${nombre.charAt(0).toUpperCase()}</span><span class="user-name">${esc(nombre.split(' ')[0])}</span><button class="btn-logout" onclick="cerrarSesion()" title="Cerrar sesión">↩</button></div>`
+  if (userActual) {
+    const nom = clienteAct?.nombre || userActual.email.split('@')[0]
+    area.innerHTML = `<div class="user-chip"><span class="user-av">${nom.charAt(0).toUpperCase()}</span><span class="user-nm">${esc(nom.split(' ')[0])}</span><button class="btn-logout" onclick="doLogout()">↩</button></div>`
   } else {
-    area.innerHTML = `<button class="btn-login-header" onclick="abrirAuth('login')">Mi cuenta</button>`
+    area.innerHTML = `<button class="btn-login-hdr" onclick="abrirAuth()">Mi cuenta</button>`
   }
 }
-function abrirAuth(tab='login') { document.getElementById('modal-auth').classList.add('open');cambiarTab(tab);document.body.style.overflow='hidden' }
-function cerrarAuth()           { document.getElementById('modal-auth').classList.remove('open');document.body.style.overflow='' }
-function cambiarTab(tab) {
-  document.getElementById('panel-login').style.display    = tab==='login'   ?'block':'none'
-  document.getElementById('panel-register').style.display = tab==='register'?'block':'none'
-  document.getElementById('tab-login').classList.toggle('active',    tab==='login')
-  document.getElementById('tab-register').classList.toggle('active', tab==='register')
-}
-async function hacerLogin() {
-  const email = document.getElementById('login-email').value.trim()
-  const pass  = document.getElementById('login-pass').value
-  const alertEl = document.getElementById('auth-login-alert')
-  const btn = document.getElementById('btn-login')
-  if (!email||!pass) { mostrarAuthAlert(alertEl,'Completa todos los campos.','error'); return }
-  btn.disabled=true; btn.textContent='Ingresando...'
-  const { error } = await db.auth.signInWithPassword({ email, password: pass })
-  btn.disabled=false; btn.textContent='Iniciar sesión'
-  if (error) { mostrarAuthAlert(alertEl,'Correo o contraseña incorrectos.','error'); return }
-  cerrarAuth()
-}
-async function hacerRegistro() {
-  const el  = id => document.getElementById(id)
-  const nombre = el('reg-nombre')?.value.trim()
-  const tel    = el('reg-tel')?.value.trim()
-  const ciudad = el('reg-ciudad')?.value.trim()
-  const email  = el('reg-email')?.value.trim()
-  const pass   = el('reg-pass')?.value
-  const pass2  = el('reg-pass2')?.value
-  const terms  = el('reg-terms')?.checked
-  const alertEl= el('auth-register-alert')
-  const btn    = el('btn-register')
-  if (!nombre||!tel||!email||!pass) { mostrarAuthAlert(alertEl,'Completa todos los campos.','error'); return }
-  if (pass!==pass2) { mostrarAuthAlert(alertEl,'Las contraseñas no coinciden.','error'); return }
-  if (pass.length<6){ mostrarAuthAlert(alertEl,'Contraseña mínimo 6 caracteres.','error'); return }
-  if (!terms)       { mostrarAuthAlert(alertEl,'Debes aceptar los términos.','error'); return }
-  btn.disabled=true; btn.textContent='Creando cuenta...'
-  const { data: authData, error: authError } = await db.auth.signUp({ email, password: pass, options:{ data:{ nombre } } })
-  if (authError) { btn.disabled=false; btn.textContent='Crear mi cuenta'; mostrarAuthAlert(alertEl, authError.message.includes('already')?'Este correo ya tiene cuenta.':authError.message,'error'); return }
-  if (authData?.user) await db.from('clientes').update({ nombre, telefono: tel, ciudad: ciudad||null, email }).eq('auth_user_id', authData.user.id)
-  btn.disabled=false; btn.textContent='Crear mi cuenta'
-  mostrarAuthAlert(alertEl,'✓ Cuenta creada. Revisa tu correo para confirmar.','success')
-  setTimeout(()=>cambiarTab('login'),2000)
-}
-async function cerrarSesion() { await db.auth.signOut() }
-function mostrarAuthAlert(el, msg, tipo) { el.innerHTML=`<div class="auth-alert auth-alert-${tipo}">${msg}</div>` }
-
-// ════════════════════════════════════════════════════════
-// MODALES INFORMACIÓN
-// ════════════════════════════════════════════════════════
-const infoContent = {
-  'como-comprar':{ titulo:'¿Cómo comprar?', html:`<div class="info-steps">
-    <div class="info-step"><div class="step-num">1</div><div><strong>Explora</strong><p>Navega por categorías o usa el buscador.</p></div></div>
-    <div class="info-step"><div class="step-num">2</div><div><strong>Agrega al carrito</strong><p>Haz clic en el producto. No necesitas cuenta.</p></div></div>
-    <div class="info-step"><div class="step-num">3</div><div><strong>Completa tu pedido</strong><p>Ingresa nombre, WhatsApp y ciudad.</p></div></div>
-    <div class="info-step"><div class="step-num">4</div><div><strong>Confirmamos</strong><p>Te contactamos por WhatsApp o procesamos el pago si pagaste con tarjeta.</p></div></div>
-    <div class="info-step"><div class="step-num">5</div><div><strong>¡Recibe!</strong><p>Productos Mary Kay 100% originales en tu puerta.</p></div></div>
-  </div>` },
-  'metodos-pago':{ titulo:'Métodos de pago', html:`<div class="info-list">
-    <div class="info-pago-item"><span class="pago-ico">💵</span><div><strong>Efectivo al recibir</strong><p>Pagas cuando tu pedido llega. Sin riesgo.</p></div></div>
-    <div class="info-pago-item"><span class="pago-ico">💳</span><div><strong>Tarjeta de crédito/débito</strong><p>Pago seguro en línea al momento del pedido. Visa y Mastercard.</p></div></div>
-    <div class="info-pago-item"><span class="pago-ico">🏦</span><div><strong>Transferencia BAC</strong><p>Te enviamos los datos por WhatsApp.</p></div></div>
-    <div class="info-pago-item"><span class="pago-ico">💻</span><div><strong>PayPal</strong><p>Pago seguro con tu cuenta PayPal.</p></div></div>
-  </div>` },
-  'envios':{ titulo:'Envíos y entregas', html:`<p>Enviamos a <strong>todos los departamentos de Honduras</strong>. Tegucigalpa 1-2 días, San Pedro Sula 2-3 días, resto del país 3-5 días.</p>
-    <div class="info-note">📦 Todos los pedidos se empacan cuidadosamente.</div>` },
-  'cambios':{ titulo:'Política de cambios', html:`<div class="info-list">
-    <div class="info-pago-item"><span class="pago-ico">✅</span><div><strong>Producto dañado</strong><p>Lo cambiamos sin costo adicional.</p></div></div>
-    <div class="info-pago-item"><span class="pago-ico">📸</span><div><strong>¿Cómo?</strong><p>Foto + WhatsApp dentro de 48 horas de recibido.</p></div></div>
-    <div class="info-pago-item"><span class="pago-ico">🚫</span><div><strong>No elegibles</strong><p>Maquillaje ya abierto por higiene.</p></div></div>
-  </div>` },
-  'terminos':{ titulo:'Términos y condiciones', html:`<h3>1. Aceptación</h3><p>Al comprar aceptas estos términos.</p><h3>2. Productos</h3><p>Productos Mary Kay 100% originales.</p><h3>3. Precios</h3><p>En Lempiras hondureños (L).</p><h3>4. Pagos</h3><p>Para tarjeta, el cargo se realiza al confirmar el pedido.</p>` },
-  'privacidad':{ titulo:'Política de privacidad', html:`<h3>Datos que recopilamos</h3><p>Nombre, correo (opcional), teléfono, ciudad.</p><h3>Uso</h3><p>Para procesar pedidos y enviar ofertas (con tu consentimiento).</p><h3>Protección</h3><p>Cifrado SSL. No vendemos ni compartimos tus datos.</p>` }
-}
-function abrirInfo(key) {
-  const c = infoContent[key]; if(!c) return
-  document.getElementById('info-title').textContent = c.titulo
-  document.getElementById('info-body').innerHTML    = c.html
-  document.getElementById('modal-info').classList.add('open')
+function abrirAuth(tab) { 
+  authTab(tab || 'login')
+  document.getElementById('auth-overlay').classList.add('open')
   document.body.style.overflow = 'hidden'
 }
-function cerrarInfo() { document.getElementById('modal-info').classList.remove('open');document.body.style.overflow='' }
-
+function cerrarAuth() {
+  document.getElementById('auth-overlay').classList.remove('open')
+  document.body.style.overflow = ''
+}
+function authTab(t) {
+  document.getElementById('panel-login').style.display = t === 'login' ? 'block' : 'none'
+  document.getElementById('panel-reg').style.display   = t === 'reg'   ? 'block' : 'none'
+  document.getElementById('tab-login').classList.toggle('active', t === 'login')
+  document.getElementById('tab-reg').classList.toggle('active', t === 'reg')
+}
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim()
+  const pass  = document.getElementById('login-pass').value
+  const al    = document.getElementById('alert-login')
+  if (!email || !pass) { al.innerHTML = '<div class="auth-alert err">Completa todos los campos.</div>'; return }
+  const { error } = await db.auth.signInWithPassword({ email, password: pass })
+  if (error) { al.innerHTML = `<div class="auth-alert err">Correo o contraseña incorrectos.</div>`; return }
+  cerrarAuth()
+}
+async function doRegister() {
+  const nom  = document.getElementById('reg-nombre').value.trim()
+  const tel  = document.getElementById('reg-tel').value.trim()
+  const em   = document.getElementById('reg-email').value.trim()
+  const pw   = document.getElementById('reg-pass').value
+  const pw2  = document.getElementById('reg-pass2').value
+  const al   = document.getElementById('alert-reg')
+  if (!nom || !tel || !em || !pw) { al.innerHTML = '<div class="auth-alert err">Completa todos los campos.</div>'; return }
+  if (pw !== pw2) { al.innerHTML = '<div class="auth-alert err">Las contraseñas no coinciden.</div>'; return }
+  if (pw.length < 6) { al.innerHTML = '<div class="auth-alert err">Contraseña mínimo 6 caracteres.</div>'; return }
+  const { data: au, error } = await db.auth.signUp({ email: em, password: pw, options: { data: { nombre: nom } } })
+  if (error) { al.innerHTML = `<div class="auth-alert err">${error.message}</div>`; return }
+  if (au?.user) await db.from('clientes').update({ nombre: nom, telefono: tel, email: em }).eq('auth_user_id', au.user.id)
+  al.innerHTML = '<div class="auth-alert ok">✓ Cuenta creada. Ya puedes iniciar sesión.</div>'
+  setTimeout(() => authTab('login'), 2000)
+}
+async function doLogout() { await db.auth.signOut() }
 
 // ════════════════════════════════════════════════════════
-// DROPDOWN NAV — data-attribute driven, position:fixed
+// 10. MODALES DE INFORMACIÓN
 // ════════════════════════════════════════════════════════
-function initNav() {
-  const nav = document.getElementById('cat-nav')
-  if (!nav) return
-
-  // Position dropdowns using fixed coordinates
-  function positionDropdown(item) {
-    const dropdown = item.querySelector('.cat-dropdown')
-    if (!dropdown) return
-    const rect = item.getBoundingClientRect()
-    const header = document.querySelector('.site-header')
-    const headerBottom = header ? header.getBoundingClientRect().bottom : 104
-    dropdown.style.top  = headerBottom + 'px'
-    dropdown.style.left = rect.left + 'px'
-  }
-
-  // Close all dropdowns
-  function closeAll() {
-    nav.querySelectorAll('.cat-nav-item.open').forEach(i => i.classList.remove('open'))
-  }
-
-  // Wire up buttons using data-attributes — NO inline onclick needed
-  nav.querySelectorAll('.cat-nav-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation()
-      const item    = btn.closest('.cat-nav-item')
-      const page    = btn.dataset.page
-      const subsec  = btn.dataset.subsec || ''
-      const hasDrop = item.classList.contains('has-dropdown')
-
-      if (hasDrop) {
-        // Toggle dropdown
-        const wasOpen = item.classList.contains('open')
-        closeAll()
-        if (!wasOpen) {
-          positionDropdown(item)
-          item.classList.add('open')
-        }
-      } else {
-        // Navigate directly
-        closeAll()
-        cambiarPagina(page, subsec || null)
-      }
-    })
-  })
-
-  // Wire up dropdown items
-  nav.querySelectorAll('.cat-dropdown-item').forEach(di => {
-    di.addEventListener('click', (e) => {
-      e.stopPropagation()
-      const page   = di.dataset.page
-      const subsec = di.dataset.subsec || null
-      closeAll()
-      cambiarPagina(page, subsec)
-    })
-  })
-
-  // Close on outside click
-  document.addEventListener('click', closeAll)
-
-  // Update active state
-  function updateActive(page) {
-    nav.querySelectorAll('.cat-nav-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.page === page)
-    })
-  }
-  window._updateNavActive = updateActive
+const INFO = {
+  envios: { t: 'Envíos y entregas', b: '<h3>Cobertura</h3><p>Enviamos a todos los departamentos de Honduras. Tegucigalpa 1-2 días, San Pedro Sula 2-3 días, resto del país 3-5 días hábiles.</p><h3>Costo</h3><p>El costo de envío varía según tu ubicación. Te informamos al confirmar por WhatsApp.</p>' },
+  pagos:  { t: 'Métodos de pago', b: '<p><strong>💵 Efectivo al recibir</strong> — Pagas cuando llega tu pedido.</p><p><strong>💳 Tarjeta</strong> — Visa y Mastercard al confirmar el pedido en línea.</p><p><strong>🏦 Transferencia BAC</strong> — Te enviamos los datos por WhatsApp.</p><p><strong>💻 PayPal</strong> — Pago seguro en línea.</p>' },
+  cambios:{ t: 'Política de cambios', b: '<p>Si el producto llega dañado o incorrecto, lo cambiamos sin costo. Contáctanos dentro de las 48 horas de recibido con foto del producto. Por higiene, no se aceptan cambios en maquillaje ya abierto o usado.</p>' },
+}
+function abrirInfo(key) {
+  const c = INFO[key]; if (!c) return
+  document.getElementById('info-title').textContent = c.t
+  document.getElementById('info-body').innerHTML    = c.b
+  document.getElementById('info-overlay').classList.add('open')
+  document.body.style.overflow = 'hidden'
+}
+function cerrarInfo() {
+  document.getElementById('info-overlay').classList.remove('open')
+  document.body.style.overflow = ''
 }
 
 // ════════════════════════════════════════════════════════
-// VARIANTES — agregar desde inventario (SQL directo)
+// ARRANQUE
 // ════════════════════════════════════════════════════════
-// Las variantes se definen en Supabase tabla producto_variantes
-// Desde el modal de producto en la tienda se muestran automáticamente
-// via variantesMap que se carga en cargarTodo()
-
-// ── Inicio ─────────────────────────────────────────────
-inicializarAuth()
 initNav()
-renderUserArea()
-actualizarCarritoUI()
-cargarTodo()
-
-// Toggle registro en checkout
-document.getElementById('co-registrar')?.addEventListener('change', function() {
-  document.getElementById('ro-pass-wrap').style.display = this.checked ? 'block' : 'none'
-})
+initAuth()
+actualizarCarrito()
+cargarDatos()
+irA('novedades')
