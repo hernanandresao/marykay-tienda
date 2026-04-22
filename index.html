@@ -51,13 +51,64 @@
   <!-- ══ NAV DE CATEGORÍAS ══ -->
   <nav class="cat-nav-wrap">
     <div class="cat-nav">
-      <button class="cat-nav-btn active" data-page="novedades" onclick="cambiarPagina('novedades')">✨ Novedades</button>
-      <button class="cat-nav-btn" data-page="skincare" onclick="cambiarPagina('skincare')">Skincare</button>
-      <button class="cat-nav-btn" data-page="maquillaje" onclick="cambiarPagina('maquillaje')">Maquillaje</button>
-      <button class="cat-nav-btn" data-page="fragancias" onclick="cambiarPagina('fragancias')">Fragancias</button>
-      <button class="cat-nav-btn" data-page="cuidado" onclick="cambiarPagina('cuidado')">Cuidado Personal</button>
-      <button class="cat-nav-btn" data-page="herramientas" onclick="cambiarPagina('herramientas')">Herramientas</button>
-      <button class="cat-nav-btn" data-page="sets" onclick="cambiarPagina('sets')">Sets y Regalos</button>
+      <div class="cat-nav-item">
+        <button class="cat-nav-btn active" data-page="novedades" onclick="cambiarPagina('novedades')">✨ Novedades</button>
+      </div>
+      <div class="cat-nav-item">
+        <button class="cat-nav-btn" data-page="skincare" onclick="cambiarPagina('skincare')">Skincare <span class="drop-arrow">▾</span></button>
+        <div class="cat-dropdown">
+          <span class="cat-dropdown-header">Skincare</span>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','clinical')"><span class="ddi-icon">🔬</span>Clinical Solutions®</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','timewise')"><span class="ddi-icon">⏱️</span>TimeWise®</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','repair')"><span class="ddi-icon">✨</span>TimeWise Repair®</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','basica')"><span class="ddi-icon">🧴</span>Skincare Básica</button>
+          <div class="cat-dropdown-sep"></div>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','clearproof')"><span class="ddi-icon">💧</span>Clear Proof® — Acné</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','mkmen')"><span class="ddi-icon">🧔</span>MKMen® — Para Él</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','especial')"><span class="ddi-icon">💎</span>Soluciones Especiales</button>
+        </div>
+      </div>
+      <div class="cat-nav-item">
+        <button class="cat-nav-btn" data-page="maquillaje" onclick="cambiarPagina('maquillaje')">Maquillaje <span class="drop-arrow">▾</span></button>
+        <div class="cat-dropdown">
+          <span class="cat-dropdown-header">Maquillaje</span>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('maquillaje','rostro')"><span class="ddi-icon">🎨</span>Rostro Impecable</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('maquillaje','ojos')"><span class="ddi-icon">👁️</span>Ojos</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('maquillaje','labios')"><span class="ddi-icon">💋</span>Labios y Mejillas</button>
+        </div>
+      </div>
+      <div class="cat-nav-item">
+        <button class="cat-nav-btn" data-page="fragancias" onclick="cambiarPagina('fragancias')">Fragancias <span class="drop-arrow">▾</span></button>
+        <div class="cat-dropdown">
+          <span class="cat-dropdown-header">Fragancias</span>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('fragancias','fragella')"><span class="ddi-icon">🌸</span>Para Ella</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('fragancias','fragel')"><span class="ddi-icon">🧔</span>Para Él</button>
+        </div>
+      </div>
+      <div class="cat-nav-item">
+        <button class="cat-nav-btn" data-page="cuidado" onclick="cambiarPagina('cuidado')">Cuidado Personal <span class="drop-arrow">▾</span></button>
+        <div class="cat-dropdown">
+          <span class="cat-dropdown-header">Cuidado Personal</span>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('cuidado','satin')"><span class="ddi-icon">🛁</span>Satin Body / Hands / Lips</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('cuidado','corpo')"><span class="ddi-icon">🚿</span>Geles y Lociones</button>
+        </div>
+      </div>
+      <div class="cat-nav-item">
+        <button class="cat-nav-btn" data-page="herramientas" onclick="cambiarPagina('herramientas')">Herramientas</button>
+      </div>
+      <div class="cat-nav-item">
+        <button class="cat-nav-btn" data-page="sets" onclick="cambiarPagina('sets')">Sets y Regalos <span class="drop-arrow">▾</span></button>
+        <div class="cat-dropdown">
+          <span class="cat-dropdown-header">Sets y Regalos</span>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-timewise')"><span class="ddi-icon">⏱️</span>TimeWise®</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-repair')"><span class="ddi-icon">✨</span>TimeWise Repair®</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-skincare')"><span class="ddi-icon">🧴</span>Skin Care Básico</button>
+          <div class="cat-dropdown-sep"></div>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-clearproof')"><span class="ddi-icon">💧</span>Clear Proof®</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-mkmen')"><span class="ddi-icon">🧔</span>MKMen®</button>
+          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-satin')"><span class="ddi-icon">🎁</span>Satin & Especiales</button>
+        </div>
+      </div>
     </div>
   </nav>
 </header>
@@ -147,14 +198,14 @@
     </div>
 
     <!-- Clinical Solutions -->
-    <div class="sub-section">
+    <div class="sub-section" id="sub-set-satin" id="sub-set-mkmen" id="sub-set-clearproof" id="sub-set-skincare" id="sub-set-repair" id="sub-set-timewise" id="sub-corpo" id="sub-satin" id="sub-fragel" id="sub-fragella" id="sub-labios" id="sub-ojos" id="sub-rostro" id="sub-especial" id="sub-mkmen" id="sub-clearproof" id="sub-basica" id="sub-repair" id="sub-timewise" id="sub-clinical">
       <div class="sub-banner sb-clinical">
         <div class="sb-content">
           <h3>Mary Kay Clinical Solutions®</h3>
           <p>Dermocosméticos clínicamente probados para los desafíos más difíciles de tu piel. Retinol, Barrier Restore, Dynamic Wrinkle Limiter y más.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-sk-clinical"></div>
+      <div class="products-grid" id="grid-skincare-clinical"></div>
     </div>
 
     <!-- TimeWise -->
@@ -165,7 +216,7 @@
           <p>La línea anti-edad #1 de Mary Kay. Scientificamente comprobada para proteger tu piel de los signos del envejecimiento con el Complejo TimeWise 3D®.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-sk-timewise"></div>
+      <div class="products-grid" id="grid-skincare-timewise"></div>
     </div>
 
     <!-- TimeWise Repair -->
@@ -176,7 +227,7 @@
           <p>Lo más avanzado en el cuidado de la piel. Para señales visibles de envejecimiento avanzado: líneas profundas, firmeza y elasticidad.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-sk-repair"></div>
+      <div class="products-grid" id="grid-skincare-repair"></div>
     </div>
 
     <!-- Básica -->
@@ -187,7 +238,7 @@
           <p>La piel sana es tendencia. Productos esenciales adecuados para todo tipo de piel, incluso la piel sensible. Limpia, exfolia, tonifica e hidrata.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-sk-basica"></div>
+      <div class="products-grid" id="grid-skincare-basica"></div>
     </div>
 
     <!-- Clear Proof -->
@@ -198,7 +249,7 @@
           <p>Resplandece sin brotes. Un régimen científicamente comprobado que elimina imperfecciones sin irritación.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-sk-clearproof"></div>
+      <div class="products-grid" id="grid-skincare-clearproof"></div>
     </div>
 
     <!-- MKMen -->
@@ -209,7 +260,7 @@
           <p>Respaldado científicamente. La ciencia se une a la sencillez en los efectivos pasos de MKMen®.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-sk-mkmen"></div>
+      <div class="products-grid" id="grid-skincare-mkmen"></div>
     </div>
 
     <!-- Soluciones especiales -->
@@ -220,7 +271,7 @@
           <p>Productos específicos para ojos, protección solar y cuidados extras que tu piel merece.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-sk-especial"></div>
+      <div class="products-grid" id="grid-skincare-especial"></div>
     </div>
   </div>
 
@@ -242,7 +293,7 @@
           <p>Bases, correctores, polvos y primers para un cutis perfecto todo el día.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-mq-rostro"></div>
+      <div class="products-grid" id="grid-maquillaje-rostro"></div>
     </div>
 
     <!-- Ojos -->
@@ -253,7 +304,7 @@
           <p>Sombras Chromafusion®, Shimmer Eye Shadow Sticks, delineadores y máscaras para una mirada irresistible.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-mq-ojos"></div>
+      <div class="products-grid" id="grid-maquillaje-ojos"></div>
     </div>
 
     <!-- Labios -->
@@ -264,7 +315,7 @@
           <p>Labiales, gloss, delineadores y Chromafusion® para labios y mejillas perfectas.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-mq-labios"></div>
+      <div class="products-grid" id="grid-maquillaje-labios"></div>
     </div>
   </div>
 
@@ -285,7 +336,7 @@
           <p>De florales sutiles a orientales intensos, cada fragancia Mary Kay para mujer es una experiencia única.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-fr-ella"></div>
+      <div class="products-grid" id="grid-fragancias-fragella"></div>
     </div>
 
     <div class="sub-section">
@@ -295,7 +346,7 @@
           <p>Frescas, maderas, modernas. Fragancias MKMen® diseñadas para el hombre de hoy.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-fr-el"></div>
+      <div class="products-grid" id="grid-fragancias-fragel"></div>
     </div>
   </div>
 
@@ -316,7 +367,7 @@
           <p>El lujo del karité. Tratamientos intensivos para manos, cuerpo y labios con karité, formulados para una suavidad duradera.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-cp-satin"></div>
+      <div class="products-grid" id="grid-cuidado-satin"></div>
     </div>
 
     <div class="sub-section">
@@ -326,7 +377,7 @@
           <p>Geles de ducha con aromas deliciosos, lociones hidratantes y productos especiales para el cuidado diario de tu cuerpo.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-cp-corpo"></div>
+      <div class="products-grid" id="grid-cuidado-corpo"></div>
     </div>
   </div>
 
@@ -340,7 +391,7 @@
       </div>
     </div>
     <div class="sub-section">
-      <div class="products-grid" id="grid-herramientas"></div>
+      <div class="products-grid" id="grid-herramientas-herramientas"></div>
     </div>
   </div>
 
@@ -368,7 +419,7 @@
           </ul>
         </div>
       </div>
-      <div class="products-grid" id="grid-set-timewise"></div>
+      <div class="products-grid" id="grid-sets-set-timewise"></div>
     </div>
 
     <!-- TimeWise Repair sets -->
@@ -385,7 +436,7 @@
           </ul>
         </div>
       </div>
-      <div class="products-grid" id="grid-set-repair"></div>
+      <div class="products-grid" id="grid-sets-set-repair"></div>
     </div>
 
     <!-- Skin Care sets -->
@@ -397,7 +448,7 @@
           <p>La manera más sencilla de comenzar tu rutina de cuidado de la piel. Kits completos con los 4 pasos esenciales para piel hidratante o matificante.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-set-skincare"></div>
+      <div class="products-grid" id="grid-sets-set-skincare"></div>
     </div>
 
     <!-- Clear Proof set -->
@@ -409,7 +460,7 @@
           <p>Régimen completo de 4 pasos para eliminar imperfecciones sin irritación. Ha demostrado clínicamente que deja la piel más clara en 7 días. <strong>¡Ahorra L18 al comprar el sistema!</strong></p>
         </div>
       </div>
-      <div class="products-grid" id="grid-set-clearproof"></div>
+      <div class="products-grid" id="grid-sets-set-clearproof"></div>
     </div>
 
     <!-- MKMen set -->
@@ -421,7 +472,7 @@
           <p>3 pasos sencillos y efectivos para que él luzca su mejor versión. Incluye limpiador, crema de afeitar y hidratante.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-set-mkmen"></div>
+      <div class="products-grid" id="grid-sets-set-mkmen"></div>
     </div>
 
     <!-- Satin sets -->
@@ -433,7 +484,7 @@
           <p>Kits de regalo perfectos para cualquier ocasión. Manos suaves, labios hidratados y cuerpo nutrido con el lujo del karité.</p>
         </div>
       </div>
-      <div class="products-grid" id="grid-set-satin"></div>
+      <div class="products-grid" id="grid-sets-set-satin"></div>
     </div>
   </div>
 
@@ -574,11 +625,39 @@
           <label>Método de pago</label>
           <select id="co-pago">
             <option>Efectivo al recibir</option>
+            <option>Tarjeta</option>
             <option>Transferencia BAC</option>
             <option>PayPal</option>
-            <option>Tarjeta</option>
-            <option>Pago en partes</option>
           </select>
+
+        <!-- Panel de pago con tarjeta -->
+        <div class="card-payment-panel" id="card-payment-panel">
+          <h4>💳 Datos de la tarjeta</h4>
+          <div class="card-icons">
+            <span class="card-icon-badge">VISA</span>
+            <span class="card-icon-badge">MC</span>
+            <span class="card-icon-badge">🔒 Seguro</span>
+          </div>
+          <div class="cform-group card-field" style="margin-bottom:10px">
+            <label>Número de tarjeta</label>
+            <input id="card-number" type="text" placeholder="1234 5678 9012 3456" maxlength="19" oninput="this.value=this.value.replace(/[^\d\s]/g,'').replace(/(\d{4})(?=\d)/g,'$1 ').trim()">
+          </div>
+          <div class="card-input-row">
+            <div class="card-field">
+              <label>Vencimiento</label>
+              <input id="card-exp" type="text" placeholder="MM/AA" maxlength="5">
+            </div>
+            <div class="card-field">
+              <label>CVV</label>
+              <input id="card-cvv" type="text" placeholder="123" maxlength="4">
+            </div>
+          </div>
+          <div class="card-field" style="margin-top:10px">
+            <label>Nombre en la tarjeta</label>
+            <input id="card-name" type="text" placeholder="Como aparece en la tarjeta">
+          </div>
+          <div class="card-secure-note">🔒 Pago seguro con cifrado SSL</div>
+        </div>
         </div>
         <div class="cform-group"><label>Dirección / Notas</label><textarea id="co-notas" placeholder="Dirección de entrega, referencias..."></textarea></div>
 
@@ -615,6 +694,7 @@
     <p>Gracias <strong id="confirm-name"></strong>, recibimos tu pedido por <strong id="confirm-total-text"></strong>.</p>
     <p class="confirm-sub">Nos comunicaremos contigo pronto para coordinar la entrega 🌸</p>
     <a class="confirm-wa-btn" id="confirm-wa" href="#" target="_blank">📱 Confirmar por WhatsApp</a>
+    <div class="confirm-wa-btn" id="confirm-pagado" style="display:none;background:#f0fdf4;color:#16a34a;border-color:#bbf7d0">💳 Pago procesado exitosamente</div>
     <button class="confirm-new-btn" onclick="document.getElementById('confirm-overlay').style.display='none'">Seguir comprando</button>
   </div>
 </div>
