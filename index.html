@@ -49,66 +49,91 @@
   </div>
 
   <!-- ══ NAV DE CATEGORÍAS ══ -->
-  <nav class="cat-nav-wrap">
-    <div class="cat-nav">
+  <nav class="cat-nav-wrap" id="cat-nav-wrap">
+    <div class="cat-nav" id="cat-nav">
+
+      <!-- Novedades — sin dropdown -->
       <div class="cat-nav-item">
-        <button class="cat-nav-btn active" data-page="novedades" onclick="cambiarPagina('novedades')">✨ Novedades</button>
+        <button class="cat-nav-btn active" data-page="novedades" data-subsec="">✨ Novedades</button>
       </div>
-      <div class="cat-nav-item">
-        <button class="cat-nav-btn" data-page="skincare" onclick="cambiarPagina('skincare')">Skincare <span class="drop-arrow">▾</span></button>
+
+      <!-- Skincare — con dropdown -->
+      <div class="cat-nav-item has-dropdown">
+        <button class="cat-nav-btn" data-page="skincare" data-subsec="">
+          Skincare <span class="drop-arrow">▾</span>
+        </button>
         <div class="cat-dropdown">
           <span class="cat-dropdown-header">Skincare</span>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','clinical')"><span class="ddi-icon">🔬</span>Clinical Solutions®</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','timewise')"><span class="ddi-icon">⏱️</span>TimeWise®</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','repair')"><span class="ddi-icon">✨</span>TimeWise Repair®</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','basica')"><span class="ddi-icon">🧴</span>Skincare Básica</button>
+          <button class="cat-dropdown-item" data-page="skincare" data-subsec="clinical"><span class="ddi-icon">🔬</span>Clinical Solutions®</button>
+          <button class="cat-dropdown-item" data-page="skincare" data-subsec="timewise"><span class="ddi-icon">⏱️</span>TimeWise®</button>
+          <button class="cat-dropdown-item" data-page="skincare" data-subsec="repair"><span class="ddi-icon">✨</span>TimeWise Repair®</button>
+          <button class="cat-dropdown-item" data-page="skincare" data-subsec="basica"><span class="ddi-icon">🧴</span>Skincare Básica</button>
           <div class="cat-dropdown-sep"></div>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','clearproof')"><span class="ddi-icon">💧</span>Clear Proof® — Acné</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','mkmen')"><span class="ddi-icon">🧔</span>MKMen® — Para Él</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('skincare','especial')"><span class="ddi-icon">💎</span>Soluciones Especiales</button>
+          <button class="cat-dropdown-item" data-page="skincare" data-subsec="clearproof"><span class="ddi-icon">💧</span>Clear Proof® — Acné</button>
+          <button class="cat-dropdown-item" data-page="skincare" data-subsec="mkmen"><span class="ddi-icon">🧔</span>MKMen® — Para Él</button>
+          <button class="cat-dropdown-item" data-page="skincare" data-subsec="especial"><span class="ddi-icon">💎</span>Soluciones Especiales</button>
         </div>
       </div>
-      <div class="cat-nav-item">
-        <button class="cat-nav-btn" data-page="maquillaje" onclick="cambiarPagina('maquillaje')">Maquillaje <span class="drop-arrow">▾</span></button>
+
+      <!-- Maquillaje — con dropdown -->
+      <div class="cat-nav-item has-dropdown">
+        <button class="cat-nav-btn" data-page="maquillaje" data-subsec="">
+          Maquillaje <span class="drop-arrow">▾</span>
+        </button>
         <div class="cat-dropdown">
           <span class="cat-dropdown-header">Maquillaje</span>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('maquillaje','rostro')"><span class="ddi-icon">🎨</span>Rostro Impecable</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('maquillaje','ojos')"><span class="ddi-icon">👁️</span>Ojos</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('maquillaje','labios')"><span class="ddi-icon">💋</span>Labios y Mejillas</button>
+          <button class="cat-dropdown-item" data-page="maquillaje" data-subsec="rostro"><span class="ddi-icon">🎨</span>Rostro Impecable</button>
+          <button class="cat-dropdown-item" data-page="maquillaje" data-subsec="ojos"><span class="ddi-icon">👁️</span>Ojos</button>
+          <button class="cat-dropdown-item" data-page="maquillaje" data-subsec="labios"><span class="ddi-icon">💋</span>Labios y Mejillas</button>
         </div>
       </div>
-      <div class="cat-nav-item">
-        <button class="cat-nav-btn" data-page="fragancias" onclick="cambiarPagina('fragancias')">Fragancias <span class="drop-arrow">▾</span></button>
+
+      <!-- Fragancias — con dropdown -->
+      <div class="cat-nav-item has-dropdown">
+        <button class="cat-nav-btn" data-page="fragancias" data-subsec="">
+          Fragancias <span class="drop-arrow">▾</span>
+        </button>
         <div class="cat-dropdown">
           <span class="cat-dropdown-header">Fragancias</span>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('fragancias','fragella')"><span class="ddi-icon">🌸</span>Para Ella</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('fragancias','fragel')"><span class="ddi-icon">🧔</span>Para Él</button>
+          <button class="cat-dropdown-item" data-page="fragancias" data-subsec="fragella"><span class="ddi-icon">🌸</span>Para Ella</button>
+          <button class="cat-dropdown-item" data-page="fragancias" data-subsec="fragel"><span class="ddi-icon">🧔</span>Para Él</button>
         </div>
       </div>
-      <div class="cat-nav-item">
-        <button class="cat-nav-btn" data-page="cuidado" onclick="cambiarPagina('cuidado')">Cuidado Personal <span class="drop-arrow">▾</span></button>
+
+      <!-- Cuidado Personal — con dropdown -->
+      <div class="cat-nav-item has-dropdown">
+        <button class="cat-nav-btn" data-page="cuidado" data-subsec="">
+          Cuidado Personal <span class="drop-arrow">▾</span>
+        </button>
         <div class="cat-dropdown">
           <span class="cat-dropdown-header">Cuidado Personal</span>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('cuidado','satin')"><span class="ddi-icon">🛁</span>Satin Body / Hands / Lips</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('cuidado','corpo')"><span class="ddi-icon">🚿</span>Geles y Lociones</button>
+          <button class="cat-dropdown-item" data-page="cuidado" data-subsec="satin"><span class="ddi-icon">🛁</span>Satin Body / Hands / Lips</button>
+          <button class="cat-dropdown-item" data-page="cuidado" data-subsec="corpo"><span class="ddi-icon">🚿</span>Geles y Lociones</button>
         </div>
       </div>
+
+      <!-- Herramientas — sin dropdown -->
       <div class="cat-nav-item">
-        <button class="cat-nav-btn" data-page="herramientas" onclick="cambiarPagina('herramientas')">Herramientas</button>
+        <button class="cat-nav-btn" data-page="herramientas" data-subsec="">Herramientas</button>
       </div>
-      <div class="cat-nav-item">
-        <button class="cat-nav-btn" data-page="sets" onclick="cambiarPagina('sets')">Sets y Regalos <span class="drop-arrow">▾</span></button>
+
+      <!-- Sets y Regalos — con dropdown -->
+      <div class="cat-nav-item has-dropdown">
+        <button class="cat-nav-btn" data-page="sets" data-subsec="">
+          Sets y Regalos <span class="drop-arrow">▾</span>
+        </button>
         <div class="cat-dropdown">
           <span class="cat-dropdown-header">Sets y Regalos</span>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-timewise')"><span class="ddi-icon">⏱️</span>TimeWise®</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-repair')"><span class="ddi-icon">✨</span>TimeWise Repair®</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-skincare')"><span class="ddi-icon">🧴</span>Skin Care Básico</button>
+          <button class="cat-dropdown-item" data-page="sets" data-subsec="set-timewise"><span class="ddi-icon">⏱️</span>TimeWise®</button>
+          <button class="cat-dropdown-item" data-page="sets" data-subsec="set-repair"><span class="ddi-icon">✨</span>TimeWise Repair®</button>
+          <button class="cat-dropdown-item" data-page="sets" data-subsec="set-skincare"><span class="ddi-icon">🧴</span>Skin Care Básico</button>
           <div class="cat-dropdown-sep"></div>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-clearproof')"><span class="ddi-icon">💧</span>Clear Proof®</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-mkmen')"><span class="ddi-icon">🧔</span>MKMen®</button>
-          <button class="cat-dropdown-item" onclick="cambiarPagina('sets','set-satin')"><span class="ddi-icon">🎁</span>Satin & Especiales</button>
+          <button class="cat-dropdown-item" data-page="sets" data-subsec="set-clearproof"><span class="ddi-icon">💧</span>Clear Proof®</button>
+          <button class="cat-dropdown-item" data-page="sets" data-subsec="set-mkmen"><span class="ddi-icon">🧔</span>MKMen®</button>
+          <button class="cat-dropdown-item" data-page="sets" data-subsec="set-satin"><span class="ddi-icon">🎁</span>Satin & Especiales</button>
         </div>
       </div>
+
     </div>
   </nav>
 </header>
